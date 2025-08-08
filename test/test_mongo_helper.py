@@ -2,7 +2,7 @@ from typing import Any
 import pytest
 from pytest import MonkeyPatch
 from mongomock import MongoClient
-from src.core_api.db.mongo_helper import get_mongo_client
+from core_api.db.connection import get_mongo_client
 
 @pytest.fixture
 def mock_mongo_client(monkeypatch: MonkeyPatch):
