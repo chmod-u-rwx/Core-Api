@@ -2,11 +2,11 @@ from typing import Any
 import pytest
 from pytest import MonkeyPatch
 from mongomock import MongoClient
-from core_api.db.mongo_helper import get_mongo_client
+from src.core_api.db.mongo_helper import get_mongo_client
 
 @pytest.fixture
 def mock_mongo_client(monkeypatch: MonkeyPatch):
-    monkeypatch.setattr("core_api.db.mongo_helper.MongoClient", MongoClient)
+    monkeypatch.setattr("src.core_api.db.mongo_helper.MongoClient", MongoClient)
     yield
     
 def test_mongo_connection(mock_mongo_client: Any):
