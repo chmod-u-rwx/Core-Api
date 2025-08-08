@@ -14,7 +14,7 @@ def test_job_model_valid():
     assert job.job_name == "Pahiram Ram"
     assert job.repo_url == HttpUrl("https://github.com/example/repo.git")
     
-def test_job_model_not_github_url():
+def test_job_model_not_repo_url():
     with pytest.raises(ValidationError):
         Job(
             user_id=uuid4(),

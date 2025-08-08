@@ -8,7 +8,7 @@ class Job(BaseModel):
     
     @field_validator("repo_url")
     @classmethod
-    def valudate_github_url(cls, v: str):
+    def valudate_repo_url(cls, v: str):
         if not str(v).endswith(".git"):
             raise ValueError("repo_url must be a valid repo URL")
         
