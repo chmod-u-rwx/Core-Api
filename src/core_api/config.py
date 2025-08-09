@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os
+
 load_dotenv()
 
 # put global constants here
@@ -7,3 +8,4 @@ load_dotenv()
 # also get environment variables here
 # ex:
 API_KEY = os.getenv("API_KEY") 
+MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
