@@ -12,6 +12,7 @@ def serialize_job(job: Job) -> Dict[str, Any]:
     """
     return {
         "user_id": str(job.user_id),
+        "job_id": str(job.job_id),
         "job_name": str(job.job_name),
         "job_description": str(job.job_description),
         "repo_url": str(job.repo_url)

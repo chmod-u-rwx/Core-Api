@@ -6,6 +6,7 @@ from src.core_api.models.job import Job
 def test_job_model_valid():
     job = Job(
         user_id=uuid4(),
+        job_id=uuid4(),
         job_name="Pahiram Ram",
         job_description="Pahiram lang, damot",
         repo_url=HttpUrl("https://github.com/example/repo.git"),
@@ -18,6 +19,7 @@ def test_job_model_not_repo_url():
     with pytest.raises(ValidationError):
         Job(
             user_id=uuid4(),
+            job_id=uuid4(),
             job_name="test job.",
             job_description="test job ngani",
             repo_url=HttpUrl("https://facebook.com/")
