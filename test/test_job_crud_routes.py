@@ -1,34 +1,38 @@
 # /test/test_jobs.py
 
 from fastapi.testclient import TestClient
+from src.core_api.models.job import Job
 from main import app
 from uuid import uuid4
+from pydantic import HttpUrl
 
 client = TestClient(app)
 
-sample_job_format = {
-    "userid": str(uuid4()),
-    "job_name": "Chosen Job",
-    "job_description": "Definition of the job reqs",
-    "github_url": "https://github.com/example/repo",
-    "version": "v1.1.1"
-}
+sample_job_format = Job(
+    user_id = (uuid4()), 
+    job_name = "Chosen Job",
+    job_description = "Definition of the job reqs",
+    repo_url = HttpUrl("https://github.com/example/repo.git"), 
+    )
 
 # CREATE JOB
-def test_create_job_success(): #create the job w/ correct format
-    response = client.post("/jobs/", json=sample_job_format)
+def test_create_job_success():
+    response = client.post(
+        "/jobs/",
+        json=sample_job_format.model_dump(mode="json")
+    )
     assert response.status_code == 200
     assert response.json()["message"] == "Job created"
 
 def test_create_job_fail_missing_field(): # create job w/ missing field
-    invalid_job = sample_job_format.copy()
+    invalid_job = sample_job_format.model_dump(mode="json") #mode converts HttpURl into string
     del invalid_job["job_name"] 
     response = client.post("/jobs/", json=invalid_job)
     assert response.status_code == 422 
 
 def test_create_job_fail_invalid_url(): # create job w/ invalid URL
-    invalid_job = sample_job_format.copy()
-    invalid_job["github_url"] = "not-a-valid-url"
+    invalid_job = sample_job_format.model_dump(mode="json")
+    invalid_job["repo_url"] = "not-a-valid-url"
     response = client.post("/jobs/", json=invalid_job)
     assert response.status_code == 422 
 
@@ -53,7 +57,7 @@ def test_read_job_fail_not_found():
 # UPDATE JOB
 def test_update_job_success():
     job_id = str(uuid4())
-    updated_job = sample_job_format.copy()
+    updated_job = sample_job_format.model_dump(mode="json")
     updated_job["job_name"] = "Updated Name"
     response = client.put(f"/jobs/{job_id}", json=updated_job)
     assert response.status_code == 200
@@ -65,7 +69,7 @@ def test_update_job_fail_empty_content():
     assert response.status_code == 422
 
 def test_update_job_fail_invalid_uuid():
-    updated_job = sample_job_format.copy()
+    updated_job = sample_job_format.model_dump(mode="json")
     response = client.put("/jobs/invalid-uuid", json=updated_job)
     assert response.status_code == 422
 
