@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Union
 from datetime import datetime, timezone
 from uuid import UUID
 
-from pydantic import UUID4
+from pydantic import UUID4, BaseModel, HttpUrl
 from pymongo import ASCENDING, DESCENDING
 from pymongo.database import Database
 from pymongo.collection import Collection
@@ -12,6 +12,12 @@ from pymongo.errors import PyMongoError
 from .connection import get_mongo_client
 from ..models.job import Job
 from ..config import DATABASE_NAME
+
+class JobUpdate(BaseModel):
+    job_name: Optional[str] = None
+    job_description: Optional[str] = None
+    repo_url: Optional[HttpUrl] = None
+    
     
 class JobNotFoundException(Exception):
     pass
@@ -80,35 +86,20 @@ class JobDatabase:
         
         return [Job(**doc) for doc in get_query]
     
-    def update(self, job_id: str, updated_job: Job) -> Job:
-        allowed = {"job_name", "job_description", "repo_url"}
+    def update(self, job_id: str, update_data: JobUpdate) -> Job:
         current = self.collection.find_one({"job_id": job_id})
         if not current:
             raise JobNotFoundException(f"Job with id {job_id} not found")
 
-        if str(updated_job.user_id) != current["user_id"]:
-            raise ValueError("Updates to user_id are not allowed.")
-        if str(updated_job.job_id) != current["job_id"]:
-            raise ValueError("Updates to job_id are not allowed.")
-
-        update_data = {
-            "job_name": updated_job.job_name,
-            "job_description": updated_job.job_description,
-            "repo_url": str(updated_job.repo_url),
-        }
-
-        all_fields = updated_job.model_dump()
-        disallowed = set(all_fields.keys()) - allowed - {"user_id", "job_id", "created_at", "updated_at"}
-        if disallowed:
-            raise ValueError(f"Updates are not allowed on fields: {', '.join(sorted(disallowed))}")
-
-        update_doc: Dict[str , Any] = {
-            **update_data,
-            "updated_at": datetime.now(timezone.utc)
-        }
+        update_fields = {k: v for k, v in update_data.model_dump().items() if v is not None}
+        
+        if not update_fields:
+            raise ValueError("No valid fields to update.")
+        
+        update_fields["updated_at"] = datetime.now(timezone.utc)
         
         try:
-            result = self.collection.update_one({"job_id": job_id}, {"$set": update_doc})
+            result = self.collection.update_one({"job_id": job_id}, {"$set": update_fields})
             if result.matched_count == 0:
                 raise JobNotFoundException(f"Job with id {job_id} not found")
         except PyMongoError as e:
