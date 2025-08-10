@@ -6,8 +6,8 @@ from pymongo.errors import PyMongoError
 from uuid import uuid4
 from mongomock import MongoClient
 import mongomock
-from src.core_api.db.job_db import JobDatabase, JobNotFoundException, JobUpdate
-from src.core_api.models.job import Job
+from src.core_api.db.job_db import JobDatabase, JobNotFoundException
+from src.core_api.models.job import Job, JobUpdate
 from unittest.mock import patch
 
 @pytest.fixture

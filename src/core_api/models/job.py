@@ -18,3 +18,8 @@ class Job(BaseModel):
             raise ValueError("repo_url must be a valid repo URL")
         
         return v
+    
+class JobUpdate(BaseModel):
+    job_name: Optional[str] = None
+    job_description: Optional[str] = None
+    repo_url: Optional[HttpUrl] = None

@@ -3,22 +3,16 @@ from typing import Any, Dict, List, Optional, Union
 from datetime import datetime, timezone
 from uuid import UUID
 
-from pydantic import UUID4, BaseModel, HttpUrl
+from pydantic import UUID4
 from pymongo import ASCENDING, DESCENDING
 from pymongo.database import Database
 from pymongo.collection import Collection
 from pymongo.errors import PyMongoError
 
 from .connection import get_mongo_client
-from ..models.job import Job
+from ..models.job import Job, JobUpdate
 from ..config import DATABASE_NAME
-
-class JobUpdate(BaseModel):
-    job_name: Optional[str] = None
-    job_description: Optional[str] = None
-    repo_url: Optional[HttpUrl] = None
-    
-    
+  
 class JobNotFoundException(Exception):
     pass
     
