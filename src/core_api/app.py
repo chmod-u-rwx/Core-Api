@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.core_api.routes import job_crud # NOTE: Use relative paths (important for integration testing)
+from .routes import job_crud # NOTE: Use relative paths (important for integration testing)
 
 app = FastAPI()
 
