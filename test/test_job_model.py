@@ -8,7 +8,7 @@ def test_job_model_valid():
         user_id=uuid4(),
         job_name="Pahiram Ram",
         job_description="Pahiram lang, damot",
-        repo_url="https://github.com/example/repo.git",
+        repo_url=HttpUrl("https://github.com/example/repo.git"),
     )
     
     assert job.job_name == "Pahiram Ram"
@@ -20,5 +20,5 @@ def test_job_model_not_repo_url():
             user_id=uuid4(),
             job_name="test job.",
             job_description="test job ngani",
-            repo_url="https://facebook.com/"
+            repo_url=HttpUrl("https://facebook.com/")
         )
