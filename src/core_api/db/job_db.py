@@ -12,9 +12,9 @@ from pymongo.errors import PyMongoError
 from .connection import get_mongo_client
 from ..models.job import Job, JobUpdate
 from ..config import DATABASE_NAME
-  
+
 class JobNotFoundException(Exception):
-    pass
+    ...
     
 class JobDatabase:
     def __init__(
@@ -53,7 +53,7 @@ class JobDatabase:
         return Job(**inserted)
     
     def get(self, job_id: str) -> Job:
-        doc = self.collection.find_one({job_id})
+        doc = self.collection.find_one({"job_id": job_id})
         if not doc:
             raise JobNotFoundException(f"Job with id {job_id} not found")
         
@@ -124,4 +124,4 @@ class JobDatabase:
         except PyMongoError as e:
             raise RuntimeError(f"MongoDB deletion failed: {e}") from e
         
-        return result.deleted_count == 1
+        return result.deleted_count == 1    
