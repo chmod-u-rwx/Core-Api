@@ -23,7 +23,7 @@ class JobService:
     ) -> List[Job]:
         return self.db.list_all(user_id, skip, limit, newest_first)
     
-    def update_job(self, job_id: str, update_data: JobUpdate) -> Job:
+    def update_job(self, job_id: UUID4, update_data: JobUpdate) -> Job:
         return self.db.update(job_id, update_data)
     
     def delete_job(self, job_id: Union[str, UUID]) -> bool:

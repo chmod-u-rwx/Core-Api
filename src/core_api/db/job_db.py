@@ -80,8 +80,8 @@ class JobDatabase:
         
         return [Job(**doc) for doc in get_query]
     
-    def update(self, job_id: str, update_data: JobUpdate) -> Job:
-        current = self.collection.find_one({"job_id": job_id})
+    def update(self, job_id: UUID4, update_data: JobUpdate) -> Job:
+        current = self.collection.find_one({"job_id": str(job_id)})
         if not current:
             raise JobNotFoundException(f"Job with id {job_id} not found")
 
@@ -93,13 +93,13 @@ class JobDatabase:
         update_fields["updated_at"] = datetime.now(timezone.utc)
         
         try:
-            result = self.collection.update_one({"job_id": job_id}, {"$set": update_fields})
+            result = self.collection.update_one({"job_id": str(job_id)}, {"$set": update_fields})
             if result.matched_count == 0:
                 raise JobNotFoundException(f"Job with id {job_id} not found")
         except PyMongoError as e:
             raise RuntimeError(f"MongoDB update failed: {e}") from e
         
-        updated = self.collection.find_one({"job_id": job_id})
+        updated = self.collection.find_one({"job_id": str(job_id)})
         assert updated is not None
         
         updated.pop("_id", None)

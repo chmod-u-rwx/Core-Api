@@ -76,13 +76,13 @@ def test_valid_update_job(job_service: JobService):
     
     job_service.create_job(job)
     update = JobUpdate(job_name="New Job")
-    updated_job = job_service.update_job(str(job.job_id), update)
+    updated_job = job_service.update_job(job.job_id, update)
     
     assert updated_job.job_name == "New Job", "job_name has not been updated"
     
 def test_update_not_found(job_service: JobService):
     update = JobUpdate(job_name="Update Not Found")
-    fake_id = str(uuid4())
+    fake_id = uuid4()
     
     with pytest.raises(JobNotFoundException):
         job_service.update_job(fake_id, update)
