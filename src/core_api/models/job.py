@@ -13,6 +13,3 @@ class Job(BaseModel):
             raise ValueError("repo_url must be a valid repo URL")
         
         return v
-    
-class Node(BaseModel):
-    job_slots: int
