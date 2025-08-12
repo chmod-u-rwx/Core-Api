@@ -1,6 +1,7 @@
 from typing import Any
 from uuid import uuid4
 from fastapi.testclient import TestClient
+from pydantic import HttpUrl
 import pytest
 from pytest import MonkeyPatch
 from mongomock import MongoClient as MockMongoClient
@@ -16,20 +17,21 @@ def patch_mongo(monkeypatch: MonkeyPatch, shared_mock_client: Any):
     
     monkeypatch.setattr("src.core_api.db.job_db.get_mongo_client", mock_get_mongo_client)
     
+from src.core_api.models.job import Job
 from main import app
 client: Any = TestClient(app)
 
-def create_sample_job():
-    return {
-        "user_id": str(uuid4()),
-        "job_id": str(uuid4()),
-        "job_name": "Sample Job",
-        "job_description": "Sample Description",
-        "repo_url": "https://github.com/example/repo.git"
-    }
+def create_sample_job() -> Job:
+    return Job(
+        user_id=uuid4(),
+        job_id=uuid4(),
+        job_name="Sample Job",
+        job_description="Sample Description",
+        repo_url=HttpUrl("https://github.com/example/repo.git")
+    )
     
 def test_create_job_success():
-    job = create_sample_job()
+    job = create_sample_job().model_dump(mode="json")
     response = client.post("/job/create", json=job)
     assert response.status_code == 200
     data = response.json()
@@ -37,25 +39,25 @@ def test_create_job_success():
     assert data["job_id"] == job["job_id"]
     
 def test_create_job_missing_fields():
-    job = create_sample_job()
+    job = create_sample_job().model_dump(mode="json")
     del job["job_name"]
     response = client.post("/job/create", json=job)
     assert response.status_code == 422
     
 def test_create_job_invalid_url():
-    job = create_sample_job()
+    job = create_sample_job().model_dump(mode="json")
     job["repo_url"] = "not-a-url"
     response = client.post("/job/create", json=job)
     assert response.status_code == 422
     
 def test_create_job_invalid_repo_url():
-    job = create_sample_job()
+    job = create_sample_job().model_dump(mode="json")
     job["repo_url"] = "https://facebook.com/profile"
     response = client.post("/job/create", json=job)
     assert response.status_code == 422
     
 def test_get_job_success():
-    job = create_sample_job()
+    job = create_sample_job().model_dump(mode="json")
     post = client.post("/job/create", json=job)
     job_id = post.json()["job_id"]
     response = client.get(f"/job/get/{job_id}")
@@ -73,13 +75,13 @@ def test_list_jobs_empty():
     
 def test_list_jobs_pagination():
     for _ in range(5):
-        client.post("/job/create", json=create_sample_job())
+        client.post("/job/create", json=create_sample_job().model_dump(mode="json"))
     response = client.get("/job/list?skip=2&limit=2")
     assert response.status_code == 200
     assert len(response.json()) == 2
     
 def test_list_jobs_user_filter():
-    job = create_sample_job()
+    job = create_sample_job().model_dump(mode="json")
     client.post("/job/create", json=job)
     user_id = job["user_id"]
     response = client.get(f"/job/list?user_id={user_id}")
@@ -87,7 +89,7 @@ def test_list_jobs_user_filter():
         assert item["user_id"] == user_id
     
 def test_update_job_success():
-    job = create_sample_job()
+    job = create_sample_job().model_dump(mode="json")
     post = client.post("/job/create", json=job)
     job_id = post.json()["job_id"]
     update = {"job_name": "Updated Name Test"}
@@ -102,7 +104,7 @@ def test_update_job_not_found():
     assert response.status_code == 404
     
 def test_update_job_no_fields():
-    job = create_sample_job()
+    job = create_sample_job().model_dump(mode="json")
     post = client.post("/job/create", json=job)
     job_id = post.json()["job_id"]
     update = {}
@@ -110,7 +112,7 @@ def test_update_job_no_fields():
     assert response.status_code == 422
     
 def test_delete_job_success():
-    job = create_sample_job()
+    job = create_sample_job().model_dump(mode="json")
     post = client.post("/job/create", json=job)
     job_id = post.json()["job_id"]
     response = client.delete(f"/job/delete/{job_id}")

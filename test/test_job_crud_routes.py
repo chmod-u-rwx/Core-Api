@@ -9,7 +9,8 @@ from pydantic import HttpUrl
 client = TestClient(app)
 
 sample_job_format = Job(
-    user_id = (uuid4()), 
+    user_id = uuid4(),
+    job_id = uuid4(),
     job_name = "Chosen Job",
     job_description = "Definition of the job reqs",
     repo_url = HttpUrl("https://github.com/example/repo.git"), 
