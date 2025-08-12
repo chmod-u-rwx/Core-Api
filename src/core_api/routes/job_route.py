@@ -1,0 +1,47 @@
+from typing import List, Optional
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import UUID4
+from src.core_api.db.job_db import JobNotFoundException
+from src.core_api.services.job_service import JobService
+from src.core_api.models.job import Job, JobUpdate
+
+router = APIRouter(prefix="/job", tags=["Jobs"])
+
+def get_job_service():
+    return JobService()
+
+@router.post("/create", response_model=Job)
+def create_job(job: Job):
+    return get_job_service().create_job(job)
+
+@router.get("/get/{job_id}", response_model=Job)
+def get_job(job_id: UUID4):
+    try:
+        return get_job_service().get_job(job_id)
+    except JobNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    
+@router.get("/list", response_model=List[Job])
+def list_job(
+    user_id: Optional[UUID4] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1),
+    newest_first: bool = Query(True)
+):
+    return get_job_service().list_job(user_id, skip, limit, newest_first)
+
+@router.put("/update/{job_id}", response_model=Job)
+def update_job(job_id: UUID4, update_data: JobUpdate):
+    try:
+        return get_job_service().update_job(job_id, update_data)
+    except JobNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    
+@router.delete("/delete/{job_id}")
+def delete_job(job_id: UUID4):
+    try:
+        return get_job_service().delete_job(job_id)
+    except JobNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))

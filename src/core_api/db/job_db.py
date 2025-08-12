@@ -52,8 +52,8 @@ class JobDatabase:
         
         return Job(**inserted)
     
-    def get(self, job_id: str) -> Job:
-        doc = self.collection.find_one({"job_id": job_id})
+    def get(self, job_id: UUID4) -> Job:
+        doc = self.collection.find_one({"job_id": str(job_id)})
         if not doc:
             raise JobNotFoundException(f"Job with id {job_id} not found")
         

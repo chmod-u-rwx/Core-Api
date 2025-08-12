@@ -11,7 +11,7 @@ class JobService:
     def create_job(self, job: Job) -> Job:
         return self.db.create(job)
     
-    def get_job(self, job_id: str) -> Job:
+    def get_job(self, job_id: UUID4) -> Job:
         return self.db.get(job_id)
     
     def list_job(

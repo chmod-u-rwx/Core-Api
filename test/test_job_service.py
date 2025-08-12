@@ -55,11 +55,11 @@ def test_get_job_success(job_service: JobService):
         )
     job_service.create_job(job)
     
-    fetched = job_service.get_job(str(job.job_id))
+    fetched = job_service.get_job(job.job_id)
     assert fetched.job_name == "Get Name Test", "Didn't get job_name"
         
 def test_get_job_not_found(job_service: JobService):
-    fake_id = str(uuid4())
+    fake_id = uuid4()
     
     with pytest.raises(JobNotFoundException):
         job_service.get_job(fake_id)
@@ -121,7 +121,7 @@ def test_delete_job(job_service: JobService):
     assert deleted is True, "Job has not deleted"
     
     with pytest.raises(JobNotFoundException):
-        assert job_service.get_job(str(job.job_id)) is None
+        assert job_service.get_job(job.job_id) is None
         
 def test_delete_job_not_found(job_service: JobService):
     fake_id = str(uuid4())
