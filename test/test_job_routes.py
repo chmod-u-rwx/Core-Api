@@ -17,14 +17,13 @@ def patch_mongo(monkeypatch: MonkeyPatch, shared_mock_client: Any):
     
     monkeypatch.setattr("src.core_api.db.job_db.get_mongo_client", mock_get_mongo_client)
     
-from src.core_api.models.job import Job
-from main import app
+from src.core_api.models.job import JobCreate
+from src.core_api.app import app
 client: Any = TestClient(app)
 
-def create_sample_job() -> Job:
-    return Job(
+def create_sample_job() -> JobCreate:
+    return JobCreate(
         user_id=uuid4(),
-        job_id=uuid4(),
         job_name="Sample Job",
         job_description="Sample Description",
         repo_url=HttpUrl("https://github.com/example/repo.git")
@@ -36,7 +35,7 @@ def test_create_job_success():
     assert response.status_code == 200
     data = response.json()
     assert data["job_name"] == job["job_name"]
-    assert data["job_id"] == job["job_id"]
+    assert "job_id" in data
     
 def test_create_job_missing_fields():
     job = create_sample_job().model_dump(mode="json")
