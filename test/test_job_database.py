@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Any
 from pydantic import UUID4, ValidationError
 import pytest
@@ -24,14 +25,15 @@ def make_job(
         user_id: UUID4, 
         job_id: UUID4,     
     ):
+        now = datetime.now(timezone.utc)
         return Job(
             user_id=user_id,
             job_id=job_id,
             job_name = "Borrow Ram Power", 
             job_description = "Temporary RAM boost", 
             repo_url = "https://github.com/example/repo.git", # type: ignore
-            created_at=None,
-            updated_at=None,
+            created_at=now,
+            updated_at=now,
         )
     
 def test_create_job_returns_job_in_db(job_db: JobDatabase):
@@ -46,6 +48,7 @@ def test_create_job_returns_job_in_db(job_db: JobDatabase):
     assert created.updated_at is not None
     
 def test_get_job_found_and_not_found(job_db: JobDatabase):
+    fake_id = uuid4()
     user_id = uuid4()
     job_id = uuid4()
     created = job_db.create(make_job(user_id, job_id))
@@ -53,7 +56,7 @@ def test_get_job_found_and_not_found(job_db: JobDatabase):
     assert created.user_id == user_id
     assert created.job_id == job_id
     with pytest.raises(JobNotFoundException):
-        job_db.get("000000000000000000000000")
+        job_db.get(fake_id)
     assert created is not None
     
 def test_list_jobs_filter_and_pagination(job_db: JobDatabase):
@@ -83,7 +86,7 @@ def test_update_job_success(job_db: JobDatabase):
     
     updated_model = JobUpdate(job_name="New Job", job_description="Test Desc")
     
-    updated = job_db.update(str(created.job_id), updated_model)
+    updated = job_db.update(created.job_id, updated_model)
     assert updated is not None
     assert updated.job_id == created.job_id
     assert updated.job_name == "New Job"
@@ -95,7 +98,7 @@ def test_update_job_no_field_raise(job_db: JobDatabase):
     created = job_db.create(make_job(user_id, job_id))
     
     with pytest.raises(ValueError):
-        job_db.update(str(created.job_id), JobUpdate())
+        job_db.update(created.job_id, JobUpdate())
         
 def test_update_job_invalid_repo_url_raises(job_db: JobDatabase):
     user_id = uuid4()
