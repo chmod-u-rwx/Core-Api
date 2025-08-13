@@ -1,14 +1,26 @@
 from typing import List, Optional, Union
-from uuid import UUID
+from uuid import UUID, uuid4
 from pydantic import UUID4
 from src.core_api.db.job_db import JobDatabase
-from src.core_api.models.job import Job, JobUpdate
+from src.core_api.models.job import Job, JobUpdate, JobCreate
+from datetime import datetime, timezone
 
 class JobService:
     def __init__(self) -> None:
         self.db = JobDatabase()
         
-    def create_job(self, job: Job) -> Job:
+    def create_job(self, create_job: JobCreate) -> Job:
+        job_id = uuid4()
+        now = datetime.now(timezone.utc)
+        job = Job(
+            user_id=create_job.user_id,
+            job_id=job_id,
+            job_name=create_job.job_name,
+            job_description=create_job.job_description,
+            repo_url=create_job.repo_url,
+            created_at=now,
+            updated_at=now,
+        )
         return self.db.create(job)
     
     def get_job(self, job_id: UUID4) -> Job:

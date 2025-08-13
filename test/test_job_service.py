@@ -1,7 +1,7 @@
 from typing import Any
 from unittest.mock import patch
 from uuid import uuid4
-from src.core_api.models.job import Job, JobUpdate
+from src.core_api.models.job import JobUpdate, JobCreate
 from src.core_api.db.job_db import JobDatabase, JobNotFoundException
 from src.core_api.services.job_service import JobService
 import mongomock
@@ -24,38 +24,35 @@ def job_service(job_db: JobDatabase):
     return service
         
 def test_create_valid_job(job_service: JobService):
-    job = Job(
+    job_create = JobCreate(
         user_id=uuid4(),
-        job_id=uuid4(),
         job_name="Test Job",
         job_description="A description",
         repo_url="https://github.com/example.repo.git" # type: ignore
     )
-    created = job_service.create_job(job)
+    created = job_service.create_job(job_create)
     assert created.job_name == "Test Job"
     
 def test_create_missing_fields(job_service: JobService):
     with pytest.raises(Exception):
-        job = Job(
-            user_id=uuid4(),
-            job_id=uuid4(),
-            job_name="",
-            job_description="",
-            repo_url="https://github.com/example" # type: ignore
-        )
-        job_service.create_job(job)
+        job_create = JobCreate(
+        user_id=uuid4(),
+        job_name="",
+        job_description="",
+        repo_url="https://github.com/example.repo.git" # type: ignore
+    )
+        job_service.create_job(job_create)
         
 def test_get_job_success(job_service: JobService):
-    job = Job(
-            user_id=uuid4(),
-            job_id=uuid4(),
-            job_name="Get Name Test",
-            job_description="Testing Description",
-            repo_url="https://github.com/example/repo.git" # type: ignore
-        )
-    job_service.create_job(job)
+    job_create = JobCreate(
+        user_id=uuid4(),
+        job_name="Get Name Test",
+        job_description="A description",
+        repo_url="https://github.com/example.repo.git" # type: ignore
+    )
     
-    fetched = job_service.get_job(job.job_id)
+    created=job_service.create_job(job_create)
+    fetched = job_service.get_job(created.job_id)
     assert fetched.job_name == "Get Name Test", "Didn't get job_name"
         
 def test_get_job_not_found(job_service: JobService):
@@ -66,17 +63,16 @@ def test_get_job_not_found(job_service: JobService):
         assert fake_id is None
     
 def test_valid_update_job(job_service: JobService):
-    job = Job(
-            user_id=uuid4(),
-            job_id=uuid4(),
-            job_name="Testing Job Update",
-            job_description="Testing Description",
-            repo_url="https://github.com/example/repo.git" # type: ignore
-        )
+    job_create = JobCreate(
+        user_id=uuid4(),
+        job_name="Test Job",
+        job_description="A description",
+        repo_url="https://github.com/example.repo.git" # type: ignore
+    )
     
-    job_service.create_job(job)
+    created=job_service.create_job(job_create)
     update = JobUpdate(job_name="New Job")
-    updated_job = job_service.update_job(job.job_id, update)
+    updated_job = job_service.update_job(created.job_id, update)
     
     assert updated_job.job_name == "New Job", "job_name has not been updated"
     
@@ -92,36 +88,34 @@ def test_list_all__empty_job(job_service: JobService):
     assert jobs == [], "All Job is not listed"
     
 def test_list_all_non_empty_job(job_service: JobService):
-    job = Job(
-            user_id=uuid4(),
-            job_id=uuid4(),
-            job_name="Testing Job List",
-            job_description="Testing Description",
-            repo_url="https://github.com/example/repo.git" # type: ignore
-        )
+    job_create = JobCreate(
+        user_id=uuid4(),
+        job_name="Test Job",
+        job_description="A description",
+        repo_url="https://github.com/example.repo.git" # type: ignore
+    )
     
-    job_service.create_job(job)
+    job_service.create_job(job_create)
     jobs = job_service.list_job()
     
     assert len(jobs) == 1
-    assert jobs[0].job_name == "Testing Job List"
+    assert jobs[0].job_name == "Test Job"
     
 def test_delete_job(job_service: JobService):
-    job = Job(
-            user_id=uuid4(),
-            job_id=uuid4(),
-            job_name="Testing Job Update",
-            job_description="Testing Description",
-            repo_url="https://github.com/example/repo.git" # type: ignore
-        )
+    job_create = JobCreate(
+        user_id=uuid4(),
+        job_name="Test Job",
+        job_description="A description",
+        repo_url="https://github.com/example.repo.git" # type: ignore
+    )
     
-    job_service.create_job(job)
+    created = job_service.create_job(job_create)
     
-    deleted = job_service.delete_job(job.job_id)
+    deleted = job_service.delete_job(created.job_id)
     assert deleted is True, "Job has not deleted"
     
     with pytest.raises(JobNotFoundException):
-        assert job_service.get_job(job.job_id) is None
+        assert job_service.get_job(created.job_id) is None
         
 def test_delete_job_not_found(job_service: JobService):
     fake_id = str(uuid4())

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Any
 from pydantic import UUID4, ValidationError
 import pytest
@@ -24,14 +25,15 @@ def make_job(
         user_id: UUID4, 
         job_id: UUID4,     
     ):
+        now = datetime.now(timezone.utc)
         return Job(
             user_id=user_id,
             job_id=job_id,
             job_name = "Borrow Ram Power", 
             job_description = "Temporary RAM boost", 
             repo_url = "https://github.com/example/repo.git", # type: ignore
-            created_at=None,
-            updated_at=None,
+            created_at=now,
+            updated_at=now,
         )
     
 def test_create_job_returns_job_in_db(job_db: JobDatabase):

@@ -3,21 +3,21 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import UUID4
 from src.core_api.db.job_db import JobNotFoundException
 from src.core_api.services.job_service import JobService
-from src.core_api.models.job import Job, JobUpdate
+from src.core_api.models.job import Job, JobCreate, JobUpdate
 
 router = APIRouter(prefix="/job", tags=["Jobs"])
 
-def get_job_service():
-    return JobService()
-
 @router.post("/create", response_model=Job)
-def create_job(job: Job):
-    return get_job_service().create_job(job)
+def create_job(create_job: JobCreate):
+    try:
+        return JobService().create_job(create_job)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
 @router.get("/get/{job_id}", response_model=Job)
 def get_job(job_id: UUID4):
     try:
-        return get_job_service().get_job(job_id)
+        return JobService().get_job(job_id)
     except JobNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
     
@@ -28,12 +28,17 @@ def list_job(
     limit: int = Query(50, ge=1),
     newest_first: bool = Query(True)
 ):
-    return get_job_service().list_job(user_id, skip, limit, newest_first)
+    if limit < 1:
+        raise HTTPException(
+            status_code=422,
+            detail="Parameter 'limit' must be greater than or equal to 1. This is required for pagination and to avoid accidental performance issues."
+        )
+    return JobService().list_job(user_id, skip, limit, newest_first)
 
 @router.put("/update/{job_id}", response_model=Job)
 def update_job(job_id: UUID4, update_data: JobUpdate):
     try:
-        return get_job_service().update_job(job_id, update_data)
+        return JobService().update_job(job_id, update_data)
     except JobNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
@@ -42,6 +47,6 @@ def update_job(job_id: UUID4, update_data: JobUpdate):
 @router.delete("/delete/{job_id}")
 def delete_job(job_id: UUID4):
     try:
-        return get_job_service().delete_job(job_id)
+        return JobService().delete_job(job_id)
     except JobNotFoundException as e:
         raise HTTPException(status_code=404, detail=str(e))

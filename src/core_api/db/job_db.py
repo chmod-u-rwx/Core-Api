@@ -31,13 +31,12 @@ class JobDatabase:
     
     #  --- CRUD Operations ---
     def create(self, job: Job) -> Job:
-        now = datetime.now(timezone.utc)
         doc = job.model_dump(mode='json', by_alias=True, exclude_unset=True)
         doc.update({
             "user_id": str(job.user_id),
             "job_id": str(job.job_id),
-            "created_at": str(now),
-            "updated_at": str(now)
+            "created_at": str(job.created_at),
+            "updated_at": str(job.updated_at)
         })
         
         try:
