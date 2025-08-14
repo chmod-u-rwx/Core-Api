@@ -1,0 +1,5 @@
+from pydantic import BaseModel, Field
+
+class Node(BaseModel):
+    node_id: str = Field(..., min_length=1, description="Id for node")
+    job_slots: int = Field(..., ge=0, description="Job slots on the node")
