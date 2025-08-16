@@ -1,6 +1,5 @@
 from fastapi import FastAPI
-from .routes import sample # NOTE: Use relative paths (important for integration testing)
+from src.core_api.routes import job_route
 
-app = FastAPI(title="Core API")
-
-app.include_router(sample.router)
+app = FastAPI()
+app.include_router(job_route.router)
