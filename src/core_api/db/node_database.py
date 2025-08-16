@@ -1,11 +1,17 @@
 from typing import Dict, Optional, List, Any
+from uuid import UUID
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError, DuplicateKeyError
 from ..models.node_model import Node
 from ..config import DATABASE_URL, DATABASE_CONNECT_TIMEOUT
 
 class NodeDatabase:
-    def __init__(self):
+    def __init__(self, collection=None):
+        if collection is not None: #mockdb
+            self.collection = collection
+            return
+        
+
         self.client = self._get_client()
         self.db = self.client.get_database()
         self.collection = self.db["nodes"]
@@ -19,81 +25,67 @@ class NodeDatabase:
             )
             client.admin.command('ping')
             return client
-        except PyMongoError as node_db_error:
-            raise RuntimeError(f"MongoDB failed connecting: {node_db_error}")
-        # mongodb connection
+        except PyMongoError as e:
+            raise RuntimeError(f"MongoDB connection failed: {e}")
 
     def _check_indexes(self):
         try:
             self.collection.create_index("node_id", unique=True)
-        except PyMongoError as node_db_error:
-            raise RuntimeError(f"Index unresponsive: {node_db_error}")
-        # check indexing for node_id
-
+        except PyMongoError as e:
+            raise RuntimeError(f"Index creation failed: {e}")
 
     def create_node(self, node_data: Dict[str, Any]) -> Node:
+        node = Node(**node_data)
+        db_data = node.model_dump()
+        db_data["node_id"] = str(db_data["node_id"]) #string conversion
         try:
-            node = Node(**node_data)
-            result = self.collection.insert_one(node.model_dump())
-            if not result.acknowledged:
-                raise RuntimeError("Failed to create node")
+            self.collection.insert_one(db_data)
             return node
         except DuplicateKeyError:
-            raise ValueError(f"Node with ID {node_data.get('node_id')} already exists")
-        except PyMongoError as node_db_error:
-            raise RuntimeError(f"Creating operation failed: {node_db_error}")
-        # creating new node
+            raise ValueError(f"Node with ID {node.node_id} already exists")
+        except PyMongoError as e:
+            raise RuntimeError(f"Creating node failed: {e}")
 
-
-    def get_node(self, node_id: str) -> Optional[Node]:
-        try:
-            data = self.collection.find_one({"node_id": node_id})
-            return Node(**data) if data else None
-        except PyMongoError as node_db_error:
-            raise RuntimeError(f"Database operation failed: {node_db_error}")
-        # read node by id
+    def get_node(self, node_id) -> Optional[Node]:
+        node_id_str = str(node_id)
+        data = self.collection.find_one({"node_id": node_id_str})
+        if data:
+            data["node_id"] = UUID(data["node_id"])
+            return Node(**data)
+        return None
 
     def get_all_nodes(self) -> List[Node]:
         try:
-            return [Node(**data) for data in self.collection.find()]
-        except PyMongoError as node_db_error:
-            raise RuntimeError(f"Database operation failed: {node_db_error}")
-        # read all nodes
+            nodes = []
+            for data in self.collection.find():
+                data["node_id"] = UUID(data["node_id"])
+                nodes.append(Node(**data))
+            return nodes
+        except PyMongoError as e:
+            raise RuntimeError(f"Fetching all nodes failed: {e}")
 
+    def update_node(self, node_id, update_data: Dict[str, Any]) -> Optional[Node]:
+        node_id_str = str(node_id)
+        existing = self.get_node(node_id)
+        if not existing:
+            return None
+        updated_data = {**existing.model_dump(), **update_data}
+        updated_data["node_id"] = str(updated_data["node_id"])
+        self.collection.update_one({"node_id": node_id_str}, {"$set": updated_data})
+        updated_data["node_id"] = UUID(updated_data["node_id"])
+        return Node(**updated_data)
 
-    def update_node(self, node_id: str, update_data: Dict[str, Any]) -> Optional[Node]:
-        try:
-            existing = self.get_node(node_id)
-            if not existing:
-                return None
-
-            updated_data = {**existing.model_dump(), **update_data}
-            result = self.collection.update_one(
-                {"node_id": node_id},
-                {"$set": updated_data}
-            )
-            
-            if result.modified_count == 0:
-                return None
-            return Node(**updated_data)
-        except PyMongoError as node_db_error:
-            raise RuntimeError(f"Updating dabatase failed: {node_db_error}")
-
-    def delete_node(self, node_id: str) -> bool:
-        try:
-            result = self.collection.delete_one({"node_id": node_id})
-            return result.deleted_count > 0
-        except PyMongoError as mongodb_error:
-            raise RuntimeError(f"Deleting database failed: {mongodb_error}")
-        # removal of node by id
+    def delete_node(self, node_id) -> bool:
+        node_id_str = str(node_id)
+        result = self.collection.delete_one({"node_id": node_id_str})
+        return result.deleted_count > 0
 
     def count_nodes(self) -> int:
         try:
             return self.collection.estimated_document_count()
-        except PyMongoError as node_db_error:
-            raise RuntimeError(f"Failed Operation: {node_db_error}")
-        # counts the number of nodes
+        except PyMongoError as e:
+            raise RuntimeError(f"Counting nodes failed: {e}")
 
     def close(self):
-        self.client.close()
-        # for cleanup, close mongodb
+        if hasattr(self, "client"):
+            self.client.close()
