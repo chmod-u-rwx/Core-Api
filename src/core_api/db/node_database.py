@@ -3,21 +3,16 @@ from uuid import UUID
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError, DuplicateKeyError
 from ..models.node_model import Node
-from ..config import DATABASE_URL, DATABASE_CONNECT_TIMEOUT
+from ..config import DATABASE_URL, DATABASE_CONNECT_TIMEOUT, DATABASE_NAME
 
 class NodeDatabase:
-    def __init__(self, collection=None):
-        if collection is not None: #mockdb
-            self.collection = collection
-            return
-        
-
-        self.client = self._get_client()
-        self.db = self.client.get_database()
-        self.collection = self.db["nodes"]
+    def __init__(self, collection= "Nodes"):
+        self.client = self.get_mongo_client()
+        self.db = self.client[DATABASE_NAME] 
+        self.collection = self.db["Nodes"]
         self._check_indexes()
 
-    def _get_client(self) -> MongoClient[Any]:
+    def get_mongo_client(self) -> MongoClient[Any]:
         try:
             client: MongoClient[Any] = MongoClient(
                 DATABASE_URL,
@@ -34,7 +29,7 @@ class NodeDatabase:
         except PyMongoError as e:
             raise RuntimeError(f"Index creation failed: {e}")
 
-    def create_node(self, node_data: Dict[str, Any]) -> Node:
+    def create_node(self, node_data: Node):
         node = Node(**node_data)
         db_data = node.model_dump()
         db_data["node_id"] = str(db_data["node_id"]) #string conversion
@@ -49,10 +44,10 @@ class NodeDatabase:
     def get_node(self, node_id) -> Optional[Node]:
         node_id_str = str(node_id)
         data = self.collection.find_one({"node_id": node_id_str})
-        if data:
-            data["node_id"] = UUID(data["node_id"])
-            return Node(**data)
-        return None
+        if not data:
+            return None
+        data["node_id"] = UUID(data["node_id"])
+        return Node(**data)
 
     def get_all_nodes(self) -> List[Node]:
         try:
@@ -64,7 +59,7 @@ class NodeDatabase:
         except PyMongoError as e:
             raise RuntimeError(f"Fetching all nodes failed: {e}")
 
-    def update_node(self, node_id, update_data: Dict[str, Any]) -> Optional[Node]:
+    def update_node(self, node_id, update_data:Node):
         node_id_str = str(node_id)
         existing = self.get_node(node_id)
         if not existing:
