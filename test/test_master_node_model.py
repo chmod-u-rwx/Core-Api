@@ -86,4 +86,4 @@ def test_extra_fields_are_ignored_by_default():
     
     # Default BaseModel (Pydantic v2) ignores extras unless configured otherwise
     with pytest.raises(AttributeError):
-        _ = node.extra_field
+        _ = node.extra_field # type: ignore
