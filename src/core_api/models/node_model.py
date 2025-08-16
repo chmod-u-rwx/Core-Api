@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
+from uuid import UUID
 
 class Node(BaseModel):
-    node_id: str = Field(..., min_length=1, description="Id for node")
-    job_slots: int = Field(..., ge=0, description="Job slots on the node")
+    node_id: UUID = Field(..., description="Id for node")
+    job_slots: int = Field(..., gt=0, description="Number of job slots")
