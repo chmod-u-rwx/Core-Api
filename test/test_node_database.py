@@ -18,7 +18,7 @@ class NodeDatabase:
     def create_node(self, data: dict) -> Node:
         node = Node(**data)  # node_id will auto-generate if not provided
         try:
-            # Store as string in Mongo for easier querying
+
             doc = node.model_dump()
             doc["node_id"] = str(doc["node_id"])
             self.collection.insert_one(doc)
@@ -41,8 +41,6 @@ class NodeDatabase:
     def delete_node(self, node_id: str) -> bool:
         result = self.collection.delete_one({"node_id": node_id})
         return result.deleted_count > 0
-
-# ---------------- TESTS ----------------
 
 @pytest.fixture
 def node_db():
