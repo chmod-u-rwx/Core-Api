@@ -2,10 +2,9 @@ import re
 from pydantic import UUID4, BaseModel, Field, field_validator
 import ipaddress
 
-# Each label: no start/end hyphen, length 1–63
 label = r"(?!-)[A-Za-z0-9-]{1,63}(?<!-)"
-# Domain: at least two labels, last is alpha-only TLD (≥2 chars)
-domain_pattern = re.compile(rf"^{label}(\.{label})+\.[A-Za-z]{{2,}}$")
+# Require at least one dot, last part must be TLD of letters only
+domain_pattern = re.compile(rf"^{label}(?:\.{label})*\.[A-Za-z]{{2,}}$")
 
 class MasterNode(BaseModel):
     master_id: UUID4 = Field(...)
