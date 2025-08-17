@@ -3,25 +3,15 @@ from uuid import UUID, uuid4
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError, DuplicateKeyError
 from ..models.node_model import Node, NodeUpdates
-from ..config import DATABASE_URL, DATABASE_CONNECT_TIMEOUT, DATABASE_NAME
+from ..db.connection import get_mongo_client
+from ..config import DATABASE_NAME
 
 class NodeDatabase:
     def __init__(self):
-        self.client = self.get_mongo_client()
+        self.client = get_mongo_client()
         self.db = self.client[DATABASE_NAME] 
         self.collection = self.db["Nodes"]
         self._check_indexes()
-
-    def get_mongo_client(self) -> MongoClient[Any]:
-        try:
-            client: MongoClient[Any] = MongoClient(
-                DATABASE_URL,
-                connectTimeoutMS=DATABASE_CONNECT_TIMEOUT
-            )
-            client.admin.command('ping')
-            return client
-        except PyMongoError as e:
-            raise RuntimeError(f"MongoDB connection failed: {e}")
 
     def _check_indexes(self):
         try:
