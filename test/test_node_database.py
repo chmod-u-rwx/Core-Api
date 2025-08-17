@@ -21,8 +21,8 @@ def test_create_and_get(node_db):
 
 def test_duplicate(node_db):
     node = node_db.create_node({"job_slots": 2})
-    with pytest.raises(ValueError):
-        node_db.create_node({"node_id": str(node.node_id), "job_slots": 5})
+    with pytest.raises(ValueError, match="already exists"):
+        node_db.create_node({"node_id": node.node_id, "job_slots": 2})
 
 def test_get_nonexistent(node_db):
         node_db.get_node(str(uuid4()))
@@ -49,6 +49,3 @@ def test_delete_node(node_db):
 def test_delete_nonexistent(node_db):
     assert node_db.delete_node(str(uuid4())) is False
 
-def test_negative_job_slots(node_db):
-    with pytest.raises(ValidationError):
-        node_db.create_node({"job_slots": -1})

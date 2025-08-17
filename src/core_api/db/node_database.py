@@ -1,5 +1,5 @@
-from typing import Dict, Optional, List, Any
-from uuid import UUID
+from typing import Optional, List, Any
+from uuid import UUID, uuid4
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError, DuplicateKeyError
 from ..models.node_model import Node
@@ -30,9 +30,15 @@ class NodeDatabase:
             raise RuntimeError(f"Index creation failed: {e}")
 
     def create_node(self, node_data: Node):
-        node = Node(**node_data)
+        if isinstance(node_data, Node):
+            node = node_data
+        else:
+            if "node_id" not in node_data:
+                node_data["node_id"] = uuid4()
+            node = Node(**node_data)
         db_data = node.model_dump()
-        db_data["node_id"] = str(db_data["node_id"]) #string conversion
+        db_data["node_id"] = str(db_data["node_id"])
+        
         try:
             self.collection.insert_one(db_data)
             return node
