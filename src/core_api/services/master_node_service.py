@@ -14,6 +14,8 @@ class MasterNodeService:
     def register(self, node: MasterNode) -> MasterNode:
         try:
             return self.db.create(node)
+        except ValueError:
+            raise
         except Exception as e:
             raise RuntimeError(f"Failed to register master node: {e}")
     

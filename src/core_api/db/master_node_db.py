@@ -1,7 +1,7 @@
 from typing import Any, List
 from pydantic import UUID4
 from pymongo import ASCENDING
-from pymongo.errors import PyMongoError
+from pymongo.errors import PyMongoError, DuplicateKeyError
 from pymongo.database import Database
 from pymongo.collection import Collection 
 from src.core_api.models.master_node import MasterNode, UpdateMasterNode
@@ -37,9 +37,9 @@ class MasterNodeDatabase:
             if not result.inserted_id:
                 raise RuntimeError("Failed to insert master node: No inserted_id returned")
             return self.get(node.master_id)
+        except DuplicateKeyError as e:
+            raise ValueError("Master node already exists") from e
         except PyMongoError as e:
-            if (getattr(e, "code", None) == 11000) or ("duplicate key" in str(e)):
-                raise ValueError(f"Master node with id {node.master_id}")
             raise RuntimeError(f"Failed to create master node: {e}")
 
     def get(self, master_id: UUID4) -> MasterNode:

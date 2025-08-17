@@ -27,7 +27,7 @@ def test_register_master_node_success(service: MasterNodeService):
 def test_register_duplicate_master_node(service: MasterNodeService):
     node = create_node()
     service.register(node)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         service.register(node)
 
 def test_discover_round_robin(service: MasterNodeService):
