@@ -96,3 +96,22 @@ def test_register_invalid_uuid(client: Any):
     
     response = client.post("/master-node/register", json=node)
     assert response.status_code == 422
+
+def test_unregister_existing_node(client: Any):
+    node = MasterNode(
+        master_id=uuid4(),
+        master_address="10.0.0.42"
+    ).model_dump(mode="json")
+    client.post("/master-node/register", json=node)
+    resp = client.delete(f"/master-node/unregister/{node['master_id']}")
+    assert resp.status_code == 200
+    assert resp.json() is True
+    
+    resp2 = client.get("/master-node/discover")
+    assert resp2.status_code == 404
+
+def test_unregister_nonexistent_node(client: Any):
+    fake_id = str(uuid4())
+    resp = client.delete(f"/master-node/unregister/{fake_id}")
+    assert resp.status_code == 404
+    assert "not found" in resp.json()["detail"].lower()

@@ -23,17 +23,25 @@ class MasterNodeDatabase:
 
     def _create_indexes(self) -> None:
         try:
-            self.collection.create_index([("master_id", ASCENDING)], name="idx_master_id")
+            self.collection.create_index(
+                [("master_id", ASCENDING)],
+                name="idx_master_id",
+                unique=True,
+            )
         except PyMongoError as e:
             raise RuntimeError(f"Index creation failed: {e}")
     
     def create(self, node: MasterNode) -> MasterNode:
         try:
-            self.collection.insert_one(node.model_dump(mode="json", by_alias=True))
+            result = self.collection.insert_one(node.model_dump(mode="json", by_alias=True))
+            if not result.inserted_id:
+                raise RuntimeError("Failed to insert master node: No inserted_id returned")
             return self.get(node.master_id)
         except PyMongoError as e:
+            if (getattr(e, "code", None) == 11000) or ("duplicate key" in str(e)):
+                raise ValueError(f"Master node with id {node.master_id}")
             raise RuntimeError(f"Failed to create master node: {e}")
-    
+
     def get(self, master_id: UUID4) -> MasterNode:
         try:
             doc = self.collection.find_one({"master_id": str(master_id)})

@@ -1,4 +1,6 @@
 from threading import Lock
+
+from pydantic import UUID4
 from src.core_api.db.master_node_db import MasterNodeDatabase, MasterNodeNotFoundException
 from src.core_api.models.master_node import MasterNode
 
@@ -11,12 +13,7 @@ class MasterNodeService:
     
     def register(self, node: MasterNode) -> MasterNode:
         try:
-            self.db.get(node.master_id)
-            raise ValueError(f"Master node with id {node.master_id} already exists")
-        except MasterNodeNotFoundException:
             return self.db.create(node)
-        except ValueError:
-            raise
         except Exception as e:
             raise RuntimeError(f"Failed to register master node: {e}")
     
@@ -36,3 +33,6 @@ class MasterNodeService:
             self._rr_index[0] += 1
         
         return nodes[idx]
+    
+    def unregister(self, master_id: UUID4) -> bool:
+        return self.db.delete(master_id)

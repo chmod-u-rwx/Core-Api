@@ -1,6 +1,7 @@
 from uuid import uuid4
 import mongomock
 import pytest
+from pytest import MonkeyPatch
 from typing import Any
 from mongomock import MongoClient
 from pymongo.errors import PyMongoError
@@ -52,9 +53,26 @@ def test_create_and_get_master_node(master_node_db: MasterNodeDatabase):
     assert fetched.master_id == node.master_id
     assert fetched.master_address == node.master_address
 
+def test_craete_no_inserted_id(monkeypatch: MonkeyPatch, master_node_db: MasterNodeDatabase):
+    node = MasterNode(master_id=uuid4(), master_address="10.0.0.2")
+    class FakeResult:
+        inserted_id = None
+        monkeypatch.setattr(master_node_db.collection, "insert_one", lambda *a, **kw: FakeResult()) # type: ignore
+    with pytest.raises(RuntimeError, match="No inserted_id returned"):
+        master_node_db.create(node)
+
 def test_get_nonexistent_master_node(master_node_db: MasterNodeDatabase):
     with pytest.raises(MasterNodeNotFoundException):
         master_node_db.get(uuid4())
+
+def test_create_pymongo_error(monkeypatch: MonkeyPatch, master_node_db: MasterNodeDatabase):
+    node = MasterNode(master_id=uuid4(), master_address="10.0.0.3")
+    def boom(*a: Any, **kw: Any):
+        from pymongo.errors import PyMongoError
+        raise PyMongoError("Kaboom!")
+    monkeypatch.setattr(master_node_db.collection, "insert_one", boom)
+    with pytest.raises(RuntimeError, match="Failed to create master node: Kaboom!"):
+        master_node_db.create(node)
 
 def test_list_all_master_nodes(master_node_db: MasterNodeDatabase):
     node_one = create_sample_node()

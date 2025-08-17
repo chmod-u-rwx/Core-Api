@@ -27,7 +27,7 @@ def test_register_master_node_success(service: MasterNodeService):
 def test_register_duplicate_master_node(service: MasterNodeService):
     node = create_node()
     service.register(node)
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError):
         service.register(node)
 
 def test_discover_round_robin(service: MasterNodeService):
@@ -64,3 +64,15 @@ def test_thread_safety_of_round_robin(service: MasterNodeService):
         service.register(node)
     result = [service.discover().master_id for _ in range(10)]
     assert set(result) == set(n.master_id for n in nodes)
+
+def test_unregister_existing_node(service: MasterNodeService):
+    node = create_node()
+    service.register(node)
+    assert service.unregister(node.master_id) is True
+    with pytest.raises(MasterNodeNotFoundException):
+        service.discover()
+
+def test_unregister_nonexistent_node(service: MasterNodeService):
+    fake_id = uuid4()
+    with pytest.raises(MasterNodeNotFoundException):
+        service.unregister(fake_id)
