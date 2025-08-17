@@ -1,4 +1,5 @@
 import re
+from typing import Optional
 from pydantic import UUID4, BaseModel, Field, field_validator
 import ipaddress
 
@@ -28,3 +29,6 @@ class MasterNode(BaseModel):
             return v
         
         raise ValueError("master_address should contain a valid IP Address or domain name")
+
+class UpdateMasterNode(BaseModel):
+    master_address: Optional[str] = None

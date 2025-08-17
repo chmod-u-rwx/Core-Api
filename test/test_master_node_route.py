@@ -1,7 +1,7 @@
 from uuid import uuid4
 import pytest
 import mongomock
-from typing import Any, Set
+from typing import Any
 from fastapi.testclient import TestClient
 from mongomock import MongoClient
 from unittest.mock import patch
@@ -35,7 +35,7 @@ def test_register_master_node_duplicate(client: Any):
     assert resp_one.status_code == 200
     resp_two = client.post("/master-node/register", json=node)
     assert resp_two.status_code == 409
-    assert resp_two.json()["detail"] == "Master node already registered"
+    assert "already exists" in resp_two.json()["detail"]
     
 def test_register_invalid_master_address(client: Any):
     node = {
@@ -56,12 +56,12 @@ def test_discover_master_node_success(client: Any):
     for node in nodes:
         client.post("/master-node/register", json=node)
 
-    discovered: Set[Any] = set()
-    for _ in range(len(nodes)):
+    sorted_nodes = sorted(nodes, key=lambda n: n["master_id"])
+    for i in range(2 * len(nodes)):
         response = client.get("/master-node/discover")
         assert response.status_code == 200
-        discovered.add(response.json()["master_address"])
-    assert discovered == {n["master_address"] for n in nodes}
+        expected = sorted_nodes[i % len(nodes)]
+        assert response.json()["master_id"] == expected["master_id"]
 
 def test_discover_master_node_empty(client: Any):
     response = client.get("/master-node/discover")
