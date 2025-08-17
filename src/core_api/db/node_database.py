@@ -2,11 +2,11 @@ from typing import Optional, List, Any
 from uuid import UUID, uuid4
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError, DuplicateKeyError
-from ..models.node_model import Node
+from ..models.node_model import Node, NodeUpdates
 from ..config import DATABASE_URL, DATABASE_CONNECT_TIMEOUT, DATABASE_NAME
 
 class NodeDatabase:
-    def __init__(self, collection= "Nodes"):
+    def __init__(self):
         self.client = self.get_mongo_client()
         self.db = self.client[DATABASE_NAME] 
         self.collection = self.db["Nodes"]
@@ -29,29 +29,21 @@ class NodeDatabase:
         except PyMongoError as e:
             raise RuntimeError(f"Index creation failed: {e}")
 
-    def create_node(self, node_data: Node):
-        if isinstance(node_data, Node):
-            node = node_data
-        else:
-            if "node_id" not in node_data:
-                node_data["node_id"] = uuid4()
-            node = Node(**node_data)
-        db_data = node.model_dump()
+    def create_node(self, node_data: Node) -> Node:
+        db_data = node_data.model_dump()
         db_data["node_id"] = str(db_data["node_id"])
-        
         try:
             self.collection.insert_one(db_data)
-            return node
+            return node_data
         except DuplicateKeyError:
-            raise ValueError(f"Node with ID {node.node_id} already exists")
+            raise ValueError(f"Node with ID {node_data.node_id} already exists")
         except PyMongoError as e:
             raise RuntimeError(f"Creating node failed: {e}")
 
-    def get_node(self, node_id) -> Optional[Node]:
-        node_id_str = str(node_id)
-        data = self.collection.find_one({"node_id": node_id_str})
+    def get_node(self, node_id: UUID) -> Node:
+        data = self.collection.find_one({"node_id": str(node_id)})
         if not data:
-            return None
+            raise ValueError(f"Node with ID {node_id} does not exist")
         data["node_id"] = UUID(data["node_id"])
         return Node(**data)
 
@@ -65,20 +57,25 @@ class NodeDatabase:
         except PyMongoError as e:
             raise RuntimeError(f"Fetching all nodes failed: {e}")
 
-    def update_node(self, node_id, update_data:Node):
+    def update_node(self, node_id: UUID, update_data: NodeUpdates) -> Node:
         node_id_str = str(node_id)
-        existing = self.get_node(node_id)
+        existing = self.get_node(node_id)  # will raise if not found
         if not existing:
-            return None
-        updated_data = {**existing.model_dump(), **update_data}
-        updated_data["node_id"] = str(updated_data["node_id"])
-        self.collection.update_one({"node_id": node_id_str}, {"$set": updated_data})
-        updated_data["node_id"] = UUID(updated_data["node_id"])
-        return Node(**updated_data)
+            raise ValueError(f"Node with ID {node_id} does not exist")
+        update_fields = update_data.model_dump(exclude_unset=True)
 
-    def delete_node(self, node_id) -> bool:
-        node_id_str = str(node_id)
-        result = self.collection.delete_one({"node_id": node_id_str})
+        if not update_fields:
+            raise ValueError("Nothing to update")
+
+        self.collection.update_one(
+            {"node_id": node_id_str},
+            {"$set": update_fields})
+
+        updated = self.get_node(node_id)
+        return updated
+
+    def delete_node(self, node_id: UUID) -> bool:
+        result = self.collection.delete_one({"node_id": str(node_id)})
         return result.deleted_count > 0
 
     def count_nodes(self) -> int:
