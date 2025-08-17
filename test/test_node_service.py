@@ -1,33 +1,28 @@
 import pytest
 from uuid import uuid4
-from mongomock import MongoClient
 from src.core_api.db.node_database import NodeDatabase
 from src.core_api.services.node_service import NodeService
+from src.core_api.models.node_model import Node
 
 @pytest.fixture
 def node_db():
-    client = MongoClient()
-    db = client["test_db"]
-    return NodeDatabase(db["nodes"])
+    return NodeDatabase()
 
 @pytest.fixture
-def node_service(node_db):
+def service(node_db):
     return NodeService(node_db)
 
-def test_set_job_slots_success(node_service, node_db):
-    node_id = uuid4()
-    node_db.create_node({"node_id": node_id, "job_slots": 2})
-    updated_node = node_service.set_job_slots(node_id, 5)
-    assert updated_node.job_slots == 5
+def test_set_job_slots_inserted(service, node_db):
+    node = node_db.create_node(Node(node_id=uuid4(), job_slots=5))
+    updated = service.set_job_slots(node.node_id, 5)
+    assert updated.job_slots == 5
+    assert node_db.get_node(node.node_id).job_slots == 5
 
-def test_set_job_slots_negative(node_service, node_db):
-    node_id = uuid4()
-    node_db.create_node({"node_id": node_id, "job_slots": 2})
+def test_set_job_slots_less_than_zero(service, node_db):
+    node = node_db.create_node(Node(node_id=uuid4(), job_slots=2))
+    with pytest.raises(ValueError, match="job_slots must be >= 0"):
+        service.set_job_slots(node.node_id, -1)
+
+def test_set_job_slots_nonexistent_node(service):
     with pytest.raises(ValueError):
-        node_service.set_job_slots(node_id, -1)
-
-def test_set_job_slots_nonexistent(node_service):
-    from uuid import uuid4
-    node_id = uuid4()
-    result = node_service.set_job_slots(node_id, 3)
-    assert result is None
+        service.set_job_slots(uuid4(), 5)

@@ -1,23 +1,18 @@
-from typing import Dict, Optional, List, Any
-from uuid import UUID
+from typing import Optional, List, Any
+from uuid import UUID, uuid4
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError, DuplicateKeyError
-from ..models.node_model import Node
-from ..config import DATABASE_URL, DATABASE_CONNECT_TIMEOUT
+from ..models.node_model import Node, NodeUpdates
+from ..config import DATABASE_URL, DATABASE_CONNECT_TIMEOUT, DATABASE_NAME
 
 class NodeDatabase:
-    def __init__(self, collection=None):
-        if collection is not None: #mockdb
-            self.collection = collection
-            return
-        
-
-        self.client = self._get_client()
-        self.db = self.client.get_database()
-        self.collection = self.db["nodes"]
+    def __init__(self):
+        self.client = self.get_mongo_client()
+        self.db = self.client[DATABASE_NAME] 
+        self.collection = self.db["Nodes"]
         self._check_indexes()
 
-    def _get_client(self) -> MongoClient[Any]:
+    def get_mongo_client(self) -> MongoClient[Any]:
         try:
             client: MongoClient[Any] = MongoClient(
                 DATABASE_URL,
@@ -34,25 +29,23 @@ class NodeDatabase:
         except PyMongoError as e:
             raise RuntimeError(f"Index creation failed: {e}")
 
-    def create_node(self, node_data: Dict[str, Any]) -> Node:
-        node = Node(**node_data)
-        db_data = node.model_dump()
-        db_data["node_id"] = str(db_data["node_id"]) #string conversion
+    def create_node(self, node_data: Node) -> Node:
+        db_data = node_data.model_dump()
+        db_data["node_id"] = str(db_data["node_id"])
         try:
             self.collection.insert_one(db_data)
-            return node
+            return node_data
         except DuplicateKeyError:
-            raise ValueError(f"Node with ID {node.node_id} already exists")
+            raise ValueError(f"Node with ID {node_data.node_id} already exists")
         except PyMongoError as e:
             raise RuntimeError(f"Creating node failed: {e}")
 
-    def get_node(self, node_id) -> Optional[Node]:
-        node_id_str = str(node_id)
-        data = self.collection.find_one({"node_id": node_id_str})
-        if data:
-            data["node_id"] = UUID(data["node_id"])
-            return Node(**data)
-        return None
+    def get_node(self, node_id: UUID) -> Node:
+        data = self.collection.find_one({"node_id": str(node_id)})
+        if not data:
+            raise ValueError(f"Node with ID {node_id} does not exist")
+        data["node_id"] = UUID(data["node_id"])
+        return Node(**data)
 
     def get_all_nodes(self) -> List[Node]:
         try:
@@ -64,20 +57,25 @@ class NodeDatabase:
         except PyMongoError as e:
             raise RuntimeError(f"Fetching all nodes failed: {e}")
 
-    def update_node(self, node_id, update_data: Dict[str, Any]) -> Optional[Node]:
+    def update_node(self, node_id: UUID, update_data: NodeUpdates) -> Node:
         node_id_str = str(node_id)
-        existing = self.get_node(node_id)
+        existing = self.get_node(node_id)  # will raise if not found
         if not existing:
-            return None
-        updated_data = {**existing.model_dump(), **update_data}
-        updated_data["node_id"] = str(updated_data["node_id"])
-        self.collection.update_one({"node_id": node_id_str}, {"$set": updated_data})
-        updated_data["node_id"] = UUID(updated_data["node_id"])
-        return Node(**updated_data)
+            raise ValueError(f"Node with ID {node_id} does not exist")
+        update_fields = update_data.model_dump(exclude_unset=True)
 
-    def delete_node(self, node_id) -> bool:
-        node_id_str = str(node_id)
-        result = self.collection.delete_one({"node_id": node_id_str})
+        if not update_fields:
+            raise ValueError("Nothing to update")
+
+        self.collection.update_one(
+            {"node_id": node_id_str},
+            {"$set": update_fields})
+
+        updated = self.get_node(node_id)
+        return updated
+
+    def delete_node(self, node_id: UUID) -> bool:
+        result = self.collection.delete_one({"node_id": str(node_id)})
         return result.deleted_count > 0
 
     def count_nodes(self) -> int:

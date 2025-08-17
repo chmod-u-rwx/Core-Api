@@ -1,89 +1,50 @@
 import pytest
 from mongomock import MongoClient
 from pydantic import BaseModel, Field, ValidationError
+from uuid import uuid4, UUID
 from typing import Optional
 from pymongo.errors import DuplicateKeyError
-from pymongo import ReturnDocument
-from uuid import uuid4, UUID
-
-class Node(BaseModel):
-    node_id: UUID = Field(default_factory=uuid4)
-    job_slots: int = Field(..., ge=0)
-
-class NodeDatabase:
-    def __init__(self, collection):
-        self.collection = collection
-        self.collection.create_index("node_id", unique=True)
-
-    def create_node(self, data: dict) -> Node:
-        node = Node(**data)  # node_id will auto-generate if not provided
-        try:
-            # Store as string in Mongo for easier querying
-            doc = node.model_dump()
-            doc["node_id"] = str(doc["node_id"])
-            self.collection.insert_one(doc)
-            return node
-        except DuplicateKeyError:
-            raise ValueError("Node already exists")
-
-    def get_node(self, node_id: str) -> Optional[Node]:
-        doc = self.collection.find_one({"node_id": node_id})
-        return Node(**{**doc, "node_id": UUID(doc["node_id"])}) if doc else None
-    
-    def update_node(self, node_id: str, update_data: dict) -> Optional[Node]:
-        result = self.collection.find_one_and_update(
-            {"node_id": node_id},
-            {"$set": update_data},
-            return_document=ReturnDocument.AFTER
-        )
-        return Node(**{**result, "node_id": UUID(result["node_id"])}) if result else None
-
-    def delete_node(self, node_id: str) -> bool:
-        result = self.collection.delete_one({"node_id": node_id})
-        return result.deleted_count > 0
-
-# ---------------- TESTS ----------------
+from src.core_api.db.node_database import NodeDatabase
+from src.core_api.models.node_model import Node, NodeUpdates
 
 @pytest.fixture
 def node_db():
-    client = MongoClient()
-    db = client["test_db"]
-    return NodeDatabase(db["nodes"])
+    return NodeDatabase()
 
 def test_create_and_get(node_db):
-    node = node_db.create_node({"job_slots": 2})
-    fetched = node_db.get_node(str(node.node_id))
+    node = node_db.create_node(Node(node_id=uuid4(), job_slots=2))
+    fetched = node_db.get_node(node.node_id)
     assert fetched == node
 
 def test_duplicate(node_db):
-    node = node_db.create_node({"job_slots": 2})
-    with pytest.raises(ValueError):
-        node_db.create_node({"node_id": str(node.node_id), "job_slots": 5})
+    node = node_db.create_node(Node(node_id=uuid4(), job_slots=2))
+    with pytest.raises(ValueError, match="already exists"):
+        node_db.create_node(Node(node_id=node.node_id, job_slots=2))
 
 def test_get_nonexistent(node_db):
-    assert node_db.get_node(str(uuid4())) is None
+    with pytest.raises(ValueError, match="does not exist"):
+        node_db.get_node(uuid4())
 
 def test_invalid_data(node_db):
+    # only negative values should fail
     with pytest.raises(ValidationError):
         Node(node_id=uuid4(), job_slots=-1)
 
 def test_update_node(node_db):
-    node = node_db.create_node({"job_slots": 2})
-    updated = node_db.update_node(str(node.node_id), {"job_slots": 5})
+    node = node_db.create_node(Node(node_id=uuid4(), job_slots=2))
+    updated = node_db.update_node(node.node_id, NodeUpdates(job_slots=5))
     assert updated.job_slots == 5
-    assert node_db.get_node(str(node.node_id)).job_slots == 5
+    assert node_db.get_node(node.node_id).job_slots == 5
 
 def test_update_nonexistent(node_db):
-    assert node_db.update_node(str(uuid4()), {"job_slots": 5}) is None
+    with pytest.raises(ValueError, match="does not exist"):
+        node_db.update_node(uuid4(), NodeUpdates(job_slots=5))
 
 def test_delete_node(node_db):
-    node = node_db.create_node({"job_slots": 2})
-    assert node_db.delete_node(str(node.node_id)) is True
-    assert node_db.get_node(str(node.node_id)) is None
+    node = node_db.create_node(Node(node_id=uuid4(), job_slots=2))
+    assert node_db.delete_node(node.node_id) is True
+    with pytest.raises(ValueError, match="does not exist"):
+        node_db.get_node(node.node_id)
 
 def test_delete_nonexistent(node_db):
-    assert node_db.delete_node(str(uuid4())) is False
-
-def test_negative_job_slots(node_db):
-    with pytest.raises(ValidationError):
-        node_db.create_node({"job_slots": -1})
+    assert node_db.delete_node(uuid4()) is False
