@@ -1,6 +1,5 @@
-from typing import Optional, List, Any
-from uuid import UUID, uuid4
-from pymongo import MongoClient
+from typing import List
+from uuid import UUID
 from pymongo.errors import PyMongoError, DuplicateKeyError
 from ..models.node_model import Node, NodeUpdates
 from ..db.connection import get_mongo_client
