@@ -39,7 +39,7 @@ class MasterNodeDatabase:
             return self.get(node.master_id)
         except PyMongoError as e:
             if (getattr(e, "code", None) == 11000) or ("duplicate key" in str(e)):
-                raise ValueError(f"Master node with id {node.master_id}")
+                raise ValueError(f"Master node with id {node.master_id} already exists")
             raise RuntimeError(f"Failed to create master node: {e}")
 
     def get(self, master_id: UUID4) -> MasterNode:
