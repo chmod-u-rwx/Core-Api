@@ -38,7 +38,7 @@ class NodeDatabase:
 
     def get_all_nodes(self) -> List[Node]:
         try:
-            nodes = []
+            nodes: List[Node] = []
             for data in self.collection.find():
                 data["node_id"] = UUID(data["node_id"])
                 nodes.append(Node(**data))

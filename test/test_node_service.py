@@ -20,7 +20,7 @@ def test_set_job_slots_inserted(service: NodeService, node_db: NodeDatabase):
 
 def test_set_job_slots_less_than_zero(service: NodeService, node_db: NodeDatabase):
     node = node_db.create_node(Node(node_id=uuid4(), job_slots=2))
-    with pytest.raises(ValueError, match="job_slots must be >= 0"):
+    with pytest.raises(ValueError, match="job_slots must be 0 and up"):
         service.set_job_slots(node.node_id, -1)
 
 def test_set_job_slots_nonexistent_node(service: NodeService):
