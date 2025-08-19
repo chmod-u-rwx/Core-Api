@@ -38,9 +38,21 @@ def test_invalid_data(node_db: NodeDatabase):
 
 def test_update_node(node_db: NodeDatabase):
     node = node_db.create_node(Node(node_id=uuid4(), job_slots=2, cpu_count=1, memory_allocated=1))
-    updated = node_db.update_node(node.node_id, NodeUpdates(job_slots=5, cpu_count=1, memory_allocated=1))
+    updated = node_db.update_node(node.node_id, NodeUpdates(job_slots= 5))
     assert updated.job_slots == 5
-    assert node_db.get_node(node.node_id).job_slots == 5
+
+
+def test_update_cpu_count(node_db: NodeDatabase):
+    node = node_db.create_node(Node(node_id=uuid4(), job_slots=2, cpu_count=1, memory_allocated=1))
+    updated = node_db.update_node(node.node_id, NodeUpdates(job_slots=node.job_slots, cpu_count=3))
+    assert updated.cpu_count == 3
+    assert updated.job_slots == node.job_slots
+
+def test_update_memory_allocated(node_db: NodeDatabase):
+    node = node_db.create_node(Node(node_id=uuid4(), job_slots=2, cpu_count=1, memory_allocated=1))
+    updated = node_db.update_node(node.node_id, NodeUpdates(job_slots=node.job_slots, memory_allocated=100))
+    assert updated.memory_allocated == 100
+    assert updated.job_slots == node.job_slots
 
 def test_update_nonexistent(node_db: NodeDatabase):
     with pytest.raises(ValueError, match="does not exist"):

@@ -9,4 +9,4 @@ class NodeService:
     def set_job_slots(self, node_id: UUID, job_slots: int) -> Node:
         if job_slots < 0:
             raise ValueError("job_slots must be 0 and up")
-        return self.db.update_node(node_id, NodeUpdates(job_slots=job_slots, cpu_count=1, memory_allocated=1))
+        return self.db.update_node(node_id, NodeUpdates(job_slots=job_slots))

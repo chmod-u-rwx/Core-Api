@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from uuid import UUID
+from typing import Optional
 
 class Node(BaseModel):
     node_id: UUID = Field(..., description="Id for node")
@@ -9,6 +10,5 @@ class Node(BaseModel):
 
 class NodeUpdates(BaseModel):
     job_slots: int = Field(..., description="Updated number of job slots")
-    cpu_count: int | None = Field(..., description="Update number of CPUs allocated")
-    memory_allocated: int | None = Field(..., description="Update memory allocated in MB")
-
+    cpu_count: Optional[int] = Field(None, ge=1, description="Update number of CPUs allocated")
+    memory_allocated: Optional[int] = Field(None, ge=1, description="Update memory allocated in MB")
