@@ -5,6 +5,9 @@ from ..models.node_model import Node, NodeUpdates
 from ..db.connection import get_mongo_client
 from ..config import DATABASE_NAME
 
+class InvalidUpdate(Exception):
+    ...
+
 class NodeDatabase:
     def __init__(self):
         self.client = get_mongo_client()
@@ -32,7 +35,7 @@ class NodeDatabase:
     def get_node(self, node_id: UUID) -> Node:
         data = self.nodes.find_one({"node_id": str(node_id)})
         if not data:
-            raise ValueError(f"Node with ID {node_id} does not exist")
+            raise KeyError(f"Node with ID {node_id} does not exist")
         data["node_id"] = UUID(data["node_id"])
         return Node(**data)
 
@@ -50,15 +53,18 @@ class NodeDatabase:
         node_id_str = str(node_id)
         existing = self.get_node(node_id)  # will raise if not found
         if not existing:
-            raise ValueError(f"Node with ID {node_id} does not exist")
+            raise KeyError(f"Node with ID {node_id} does not exist")
         update_fields = update_data.model_dump(exclude_unset=True)
 
         if not update_fields:
-            raise ValueError("Nothing to update")
+            raise InvalidUpdate("Nothing to update")
 
-        self.nodes.update_one(
-            {"node_id": node_id_str},
-            {"$set": update_fields})
+        result = self.nodes.update_one(
+                                        {"node_id": node_id_str},
+                                        {"$set": update_fields})
+
+        if result.modified_count == 0:
+            raise RuntimeError("Failed to update. Mongo db did not update anything")
 
         updated = self.get_node(node_id)
         return updated
