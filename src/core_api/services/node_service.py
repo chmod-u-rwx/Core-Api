@@ -6,7 +6,6 @@ class NodeService:
     def __init__(self, node_db: NodeDatabase):
         self.db = node_db
 
-    def set_job_slots(self, node_id: UUID, job_slots: int) -> Node:
-        if job_slots < 0:
-            raise ValueError("job_slots must be 0 and up")
-        return self.db.update_node(node_id, NodeUpdates(job_slots=job_slots))
+    def update_node(self, node_id: UUID, node_updates: NodeUpdates) -> Node:
+        return self.db.update_node(node_id, node_updates)
+    
