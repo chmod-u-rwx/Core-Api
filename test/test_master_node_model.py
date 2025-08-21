@@ -82,7 +82,7 @@ def test_model_dump_roundtrip_preserves_values():
     assert dumped["master_address"] == addr
     
 def test_extra_fields_are_ignored_by_default():
-    node = MasterNode(master_id=uuid4(), master_address="10.0.0.1", extra_field="ignored")
+    node = MasterNode(master_id=uuid4(), master_address="10.0.0.1", extra_field="ignored") # type: ignore
     
     # Default BaseModel (Pydantic v2) ignores extras unless configured otherwise
     with pytest.raises(AttributeError):

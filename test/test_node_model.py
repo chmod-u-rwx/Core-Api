@@ -13,26 +13,26 @@ def test_node_creation():
 
 def test_missing_node_id_raises_error():
     with pytest.raises(ValidationError):
-        Node(job_slots=3)
+        Node(job_slots=3) # type: ignore
 
 def test_no_job_slots():
     with pytest.raises(ValidationError):
-        Node(node_id=uuid4()) 
+        Node(node_id=uuid4())  # type: ignore
 
 def test_invalid_uuid_string():
     with pytest.raises(ValidationError):
-        Node(node_id="not-a-uuid", job_slots=4) 
+        Node(node_id="not-a-uuid", job_slots=4)  # type: ignore
 
 def test_empty_node_id_():
     with pytest.raises(ValidationError):
-        Node(node_id="", job_slots=4)
+        Node(node_id="", job_slots=4) # type: ignore
 
 def test_cpu_count_less_minimum():
     with pytest.raises(ValidationError):
-        Node(node_id=uuid4())
+        Node(node_id=uuid4()) # type: ignore
 
 def test_memory_allocation_less_minimum():
     with pytest.raises(ValidationError):
-        Node(node_id=uuid4())
+        Node(node_id=uuid4()) # type: ignore
 
     

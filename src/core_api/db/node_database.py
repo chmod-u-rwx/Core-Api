@@ -9,12 +9,12 @@ class NodeDatabase:
     def __init__(self):
         self.client = get_mongo_client()
         self.db = self.client[DATABASE_NAME] 
-        self.collection = self.db["Nodes"]
+        self.nodes = self.db["Nodes"]
         self._check_indexes()
 
     def _check_indexes(self):
         try:
-            self.collection.create_index("node_id", unique=True)
+            self.nodes.create_index("node_id", unique=True)
         except PyMongoError as e:
             raise RuntimeError(f"Index creation failed: {e}")
 
@@ -22,7 +22,7 @@ class NodeDatabase:
         db_data = node_data.model_dump()
         db_data["node_id"] = str(db_data["node_id"])
         try:
-            self.collection.insert_one(db_data)
+            self.nodes.insert_one(db_data)
             return node_data
         except DuplicateKeyError:
             raise ValueError(f"Node with ID {node_data.node_id} already exists")
@@ -30,7 +30,7 @@ class NodeDatabase:
             raise RuntimeError(f"Creating node failed: {e}")
 
     def get_node(self, node_id: UUID) -> Node:
-        data = self.collection.find_one({"node_id": str(node_id)})
+        data = self.nodes.find_one({"node_id": str(node_id)})
         if not data:
             raise ValueError(f"Node with ID {node_id} does not exist")
         data["node_id"] = UUID(data["node_id"])
@@ -39,7 +39,7 @@ class NodeDatabase:
     def get_all_nodes(self) -> List[Node]:
         try:
             nodes: List[Node] = []
-            for data in self.collection.find():
+            for data in self.nodes.find():
                 data["node_id"] = UUID(data["node_id"])
                 nodes.append(Node(**data))
             return nodes
@@ -56,7 +56,7 @@ class NodeDatabase:
         if not update_fields:
             raise ValueError("Nothing to update")
 
-        self.collection.update_one(
+        self.nodes.update_one(
             {"node_id": node_id_str},
             {"$set": update_fields})
 
@@ -64,12 +64,12 @@ class NodeDatabase:
         return updated
 
     def delete_node(self, node_id: UUID) -> bool:
-        result = self.collection.delete_one({"node_id": str(node_id)})
+        result = self.nodes.delete_one({"node_id": str(node_id)})
         return result.deleted_count > 0
 
     def count_nodes(self) -> int:
         try:
-            return self.collection.estimated_document_count()
+            return self.nodes.estimated_document_count()
         except PyMongoError as e:
             raise RuntimeError(f"Counting nodes failed: {e}")
 

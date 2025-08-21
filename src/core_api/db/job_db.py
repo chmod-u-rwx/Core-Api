@@ -43,7 +43,7 @@ class JobDatabase:
             result = self.collection.insert_one(doc)
         except PyMongoError as e:
             raise RuntimeError(f"MongoDB insertion failed: {e}") from e
-        
+
         inserted = self.collection.find_one({"_id": result.inserted_id})
         assert inserted is not None
         
@@ -100,8 +100,6 @@ class JobDatabase:
         
         updated = self.collection.find_one({"job_id": str(job_id)})
         assert updated is not None
-        
-        updated.pop("_id", None)
         
         return Job(**updated)
     
