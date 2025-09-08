@@ -2,7 +2,7 @@ from typing import List, Optional, Union
 from uuid import UUID, uuid4
 from pydantic import UUID4
 from src.core_api.db.job_db import JobDatabase
-from src.core_api.models.job import Job, JobUpdate, JobCreate
+from src.core_api.models.job import Job, JobStatus, JobUpdate, JobCreate
 from datetime import datetime, timezone
 
 class JobService:
@@ -18,6 +18,8 @@ class JobService:
             job_name=create_job.job_name,
             job_description=create_job.job_description,
             repo_url=create_job.repo_url,
+            resources=create_job.resources,
+            status=JobStatus.pending,
             created_at=now,
             updated_at=now,
         )

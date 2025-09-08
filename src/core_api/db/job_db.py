@@ -35,8 +35,8 @@ class JobDatabase:
         doc.update({
             "user_id": str(job.user_id),
             "job_id": str(job.job_id),
-            "created_at": str(job.created_at),
-            "updated_at": str(job.updated_at)
+            "created_at": job.created_at.isoformat() if job.created_at else None,
+            "updated_at": job.updated_at.isoformat() if job.updated_at else None,
         })
         
         try:
