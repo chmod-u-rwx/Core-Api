@@ -8,25 +8,28 @@ class UserRoleEnum(str, Enum):
     company = "company"
 
 class Users(BaseModel):
-    user_id: Optional[UUID] = Field(default=None)
+    user_id: UUID = Field(...)
     username: str = Field(..., min_length=1, max_length=100)
     first_name: str = Field(..., min_length=1, max_length=100)
     last_name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr = Field(..., min_length=1, max_length=100)
+    password: str = Field(..., min_length=1, max_length=255)
     phone_number: str = Field(..., min_length=1, max_length=100)
     role: UserRoleEnum = Field(...)
+    company_name: Optional[str] = None
+    company_address: Optional[str] = None
 
-class IndividualUserCredentials(Users):
-    password: str = Field(...)
-    confirm_password: str = Field(...)
-    role: UserRoleEnum = Field(default=UserRoleEnum.individual)
-
-class CompanyUserCredentials(Users):
-    companyName: str = Field(..., min_length=1, max_length=100)
-    companyAddress: str = Field(..., min_length=1, max_length=100)
-    password: str = Field(...)
-    confirmPassword: str = Field(...)
-    role: UserRoleEnum = Field(default=UserRoleEnum.company)
+class UserCreate(BaseModel):
+    username: str = Field(..., min_length=1, max_length=100)
+    first_name: str = Field(..., min_length=1, max_length=100)
+    last_name: str = Field(..., min_length=1, max_length=100)
+    email: EmailStr = Field(..., min_length=1, max_length=100)
+    phone_number: str = Field(..., min_length=1, max_length=20)
+    role: UserRoleEnum = Field(...)
+    password: str = Field(..., min_length=1, max_length=100)
+    confirm_password: str = Field(..., min_length=1, max_length=100)
+    company_name: Optional[str] = None
+    company_address: Optional[str] = None
 
 class UserAuth(BaseModel):
     access_token: str = Field(...)

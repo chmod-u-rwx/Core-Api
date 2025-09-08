@@ -1,5 +1,6 @@
 import mongomock
 import pytest
+from uuid import uuid4
 from typing import Any
 from unittest.mock import patch
 from mongomock import MongoClient
@@ -14,14 +15,19 @@ def users_db():
         db = UsersDatabase()
         yield db
 
-def create_individual_user(username: str = "dame_un_grr", email: str = "test@example.com") -> Users:
+def create_individual_user(
+    username: str = "dame_un_grr",
+    email: str = "test@example.com",
+    password: str = "test123",
+) -> Users:
     return Users(
-        user_id=None,
+        user_id=uuid4(),
         username=username,
         first_name="Test",
         last_name="User",
         email=email,
         phone_number="09123456789",
+        password=password,
         role=UserRoleEnum.individual
     )
 

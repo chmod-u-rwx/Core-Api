@@ -1,4 +1,5 @@
 from typing import Any, List
+from uuid import uuid4
 from pymongo import ASCENDING
 from pymongo.errors import PyMongoError, DuplicateKeyError
 from pymongo.collection import Collection
@@ -40,7 +41,11 @@ class UsersDatabase:
     
     def create(self, user: Users) -> Users:
         try:
-            result = self.collection.insert_one(user.model_dump(mode="json", by_alias=True))
+            user_data = user.model_dump(mode="json", by_alias=True)
+            if "user_id" not in user_data or user_data["user_id"] is None:
+                user_data["user_id"] = str(uuid4())
+            
+            result = self.collection.insert_one(user_data)
             if not result.inserted_id:
                 raise RuntimeError("Failed to insert user: No inserted_id returned")
             

@@ -8,6 +8,7 @@ load_dotenv()
 # also get environment variables here
 # ex:
 API_KEY = os.getenv("API_KEY") 
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
 DATABASE_URL = os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
 DATABASE_NAME = os.getenv("MONGODB_DATABASE", "test_db")
