@@ -8,7 +8,7 @@ from uuid import uuid4
 from mongomock import MongoClient
 import mongomock
 from src.core_api.db.job_db import JobDatabase, JobNotFoundException
-from src.core_api.models.job import Job, JobUpdate
+from src.core_api.models.job import Job, JobResources, JobStatus, JobUpdate
 from unittest.mock import patch
 
 @pytest.fixture
@@ -32,6 +32,8 @@ def make_job(
             job_name = "Borrow Ram Power", 
             job_description = "Temporary RAM boost", 
             repo_url = "https://github.com/example/repo.git", # type: ignore
+            resources=JobResources(cpu=4, ram=16),
+            status=JobStatus.pending,
             created_at=now,
             updated_at=now,
         )
