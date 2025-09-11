@@ -1,7 +1,7 @@
 from typing import Any
 from unittest.mock import patch
 from uuid import uuid4
-from src.core_api.models.job import JobUpdate, JobCreate
+from src.core_api.models.job import JobResources, JobUpdate, JobCreate
 from src.core_api.db.job_db import JobDatabase, JobNotFoundException
 from src.core_api.services.job_service import JobService
 import mongomock
@@ -28,6 +28,7 @@ def test_create_valid_job(job_service: JobService):
         user_id=uuid4(),
         job_name="Test Job",
         job_description="A description",
+        resources=JobResources(cpu=2, ram=4),
         repo_url="https://github.com/example.repo.git" # type: ignore
     )
     created = job_service.create_job(job_create)
@@ -39,6 +40,7 @@ def test_create_missing_fields(job_service: JobService):
         user_id=uuid4(),
         job_name="",
         job_description="",
+        resources=JobResources(cpu=0, ram=0),
         repo_url="https://github.com/example.repo.git" # type: ignore
     )
         job_service.create_job(job_create)
@@ -48,6 +50,7 @@ def test_get_job_success(job_service: JobService):
         user_id=uuid4(),
         job_name="Get Name Test",
         job_description="A description",
+        resources=JobResources(cpu=2, ram=4),
         repo_url="https://github.com/example.repo.git" # type: ignore
     )
     
@@ -67,6 +70,7 @@ def test_valid_update_job(job_service: JobService):
         user_id=uuid4(),
         job_name="Test Job",
         job_description="A description",
+        resources=JobResources(cpu=2, ram=4),
         repo_url="https://github.com/example.repo.git" # type: ignore
     )
     
@@ -92,6 +96,7 @@ def test_list_all_non_empty_job(job_service: JobService):
         user_id=uuid4(),
         job_name="Test Job",
         job_description="A description",
+        resources=JobResources(cpu=2, ram=4),
         repo_url="https://github.com/example.repo.git" # type: ignore
     )
     
@@ -106,6 +111,7 @@ def test_delete_job(job_service: JobService):
         user_id=uuid4(),
         job_name="Test Job",
         job_description="A description",
+        resources=JobResources(cpu=2, ram=4),
         repo_url="https://github.com/example.repo.git" # type: ignore
     )
     

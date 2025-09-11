@@ -33,7 +33,7 @@ def make_job(
             job_description = "Temporary RAM boost", 
             repo_url = "https://github.com/example/repo.git", # type: ignore
             resources=JobResources(cpu=4, ram=16),
-            status=JobStatus.pending,
+            status=JobStatus.paused,
             created_at=now,
             updated_at=now,
         )

@@ -17,7 +17,7 @@ def patch_mongo(monkeypatch: MonkeyPatch, shared_mock_client: Any):
     
     monkeypatch.setattr("src.core_api.db.job_db.get_mongo_client", mock_get_mongo_client)
     
-from src.core_api.models.job import JobCreate
+from src.core_api.models.job import JobCreate, JobResources
 from src.core_api.app import app
 client: Any = TestClient(app)
 
@@ -26,6 +26,7 @@ def create_sample_job() -> JobCreate:
         user_id=uuid4(),
         job_name="Sample Job",
         job_description="Sample Description",
+        resources=JobResources(cpu=2, ram=4),
         repo_url=HttpUrl("https://github.com/example/repo.git")
     )
     
