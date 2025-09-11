@@ -4,7 +4,7 @@ from pydantic import UUID4, BaseModel, Field, HttpUrl, field_validator
 from datetime import datetime
 
 class JobStatus(str, Enum):
-    pending = "pending"
+    paused = "paused"
     running = "running"
     completed = "completed"
     failed = "failed"
@@ -20,7 +20,7 @@ class Job(BaseModel):
     job_description: str = Field(..., min_length=1, max_length=1000)
     repo_url: HttpUrl = Field(...)
     resources: JobResources = Field(...)
-    status: JobStatus = Field(default=JobStatus.pending)
+    status: JobStatus = Field(default=JobStatus.paused)
     created_at: Optional[datetime] = Field(default=None)
     updated_at: Optional[datetime] = Field(default=None)
     
