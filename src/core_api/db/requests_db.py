@@ -78,7 +78,7 @@ class RequestDatabase:
             query["job_id"] = job_id
         
         if request_status is not None:
-            query["is_success"] = request_status
+            query["status"] = request_status
         
         if start_time or end_time:
             query["timestamp"] = {}

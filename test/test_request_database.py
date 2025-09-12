@@ -51,8 +51,7 @@ def make_request(status: RequestStatus = RequestStatus.SUCCESS):
             headers={},
             body={"data", "test"},
         ),
-        is_success=status,
-        error_detail=None,
+        status=status,
         timestamp=now,
         execution_time=1.23,
         transaction_id=transaction_id
@@ -77,11 +76,11 @@ def test_list_request_filters(requests_db: RequestDatabase):
     
     success_reqs = requests_db.list_request(request_status=RequestStatus.SUCCESS)
     assert len(success_reqs) == 1
-    assert success_reqs[0].is_success == RequestStatus.SUCCESS
+    assert success_reqs[0].status == RequestStatus.SUCCESS
     
     failed_reqs = requests_db.list_request(request_status=RequestStatus.FAILED)
     assert len(failed_reqs) == 1
-    assert failed_reqs[0].is_success == RequestStatus.FAILED
+    assert failed_reqs[0].status == RequestStatus.FAILED
 
 def test_delete_request(requests_db: RequestDatabase):
     req = make_request()
