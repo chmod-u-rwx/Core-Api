@@ -85,7 +85,7 @@ def test_list_request_filters(requests_db: RequestDatabase):
 def test_delete_request(requests_db: RequestDatabase):
     req = make_request()
     requests_db.create(req)
-    assert requests_db.delete(req.request_id) is True
+    assert requests_db.delete(req.request_id) is None
     with pytest.raises(RequestNotFoundException):
         requests_db.get(req.request_id)
 

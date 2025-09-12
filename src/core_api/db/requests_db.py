@@ -100,7 +100,5 @@ class RequestDatabase:
             result = self.collection.delete_one({"request_id": str(request_id)})
             if result.deleted_count == 0:
                 raise RequestNotFoundException(f"Request with an id: {request_id} is not found")
-
-            return result.deleted_count > 0
         except PyMongoError as e:
             raise RuntimeError(f"Failed to delete request: {e}")

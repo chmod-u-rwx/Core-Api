@@ -18,5 +18,5 @@ class Requests(BaseModel):
     response_payload: JobResponsePayload = Field(...)
     status: Optional[RequestStatus] = Field(default=None)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    execution_time: Optional[float] = Field(default=None, description="Execution time in seconds")
-    transaction_id: Optional[UUID] = Field(default=None, description="Reference to Job expense")
+    execution_time: float = Field(..., description="Execution time in seconds")
+    transaction_id: UUID = Field(..., description="Reference to Job expense")
