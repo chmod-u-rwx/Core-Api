@@ -28,7 +28,7 @@ def create_individual_user(
         email=email,
         phone_number="09123456789",
         password=password,
-        role=UserRoleEnum.individual
+        role=UserRoleEnum.INDIVIDUAL
     )
 
 def test_create_indiv_user(users_db: UsersDatabase):
