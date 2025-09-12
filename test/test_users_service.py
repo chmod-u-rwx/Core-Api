@@ -17,7 +17,7 @@ def create_user(
     username: str="testuser",
     email: str="test@example.com",
     password: str="password123",
-    role: UserRoleEnum=UserRoleEnum.individual
+    role: UserRoleEnum=UserRoleEnum.INDIVIDUAL
 ) -> UserCreate:
     return UserCreate(
         username=username,

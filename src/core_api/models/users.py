@@ -4,9 +4,9 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field
 
 class UserRoleEnum(str, Enum):
-    individual = "individual"
-    company = "company"
-    worker = "worker"
+    INDIVIDUAL = "individual"
+    COMPANY = "company"
+    WORKER = "worker"
 
 class Users(BaseModel):
     user_id: UUID = Field(...)
