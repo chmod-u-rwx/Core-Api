@@ -95,7 +95,7 @@ class RequestDatabase:
         
         return [Requests(**doc) for doc in docs]
     
-    def delete(self, request_id: UUID) -> bool:
+    def delete(self, request_id: UUID):
         try:
             result = self.collection.delete_one({"request_id": str(request_id)})
             if result.deleted_count == 0:
