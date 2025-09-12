@@ -12,6 +12,18 @@ class UsersService:
         if user_data.password != user_data.confirm_password:
             raise ValueError("Passwords do not match")
         
+        try:
+            self.db.get_by_email(user_data.email)
+            raise ValueError("Email Address already exists.")
+        except UserNotFoundException:
+            ...
+        
+        try:
+            self.db.get_by_username(user_data.username)
+            raise ValueError("Username already exists.")
+        except UserNotFoundException:
+            ...
+        
         password_hashed = hash_password(user_data.password)
         user_dict = user_data.model_dump(exclude={"confirm_password"})
         user_dict["password"] = password_hashed
