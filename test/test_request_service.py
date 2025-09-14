@@ -73,15 +73,15 @@ def test_list_and_count_requests(request_service: RequestService):
     all_requests = request_service.list_requests()
     assert len(all_requests) == 3
     
-    success_requests = request_service.list_successful_requests()
+    success_requests = request_service.list_requests(status=RequestStatus.SUCCESS)
     assert len(success_requests) == 2
     
-    failed_requests = request_service.list_failed_requests()
+    failed_requests = request_service.list_requests(status=RequestStatus.FAILED)
     assert len(failed_requests) == 1
     
     assert request_service.count_requests() == 3
-    assert request_service.count_success() == 2
-    assert request_service.count_failed() == 1
+    assert request_service.count_requests(status=RequestStatus.SUCCESS) == 2
+    assert request_service.count_requests(status=RequestStatus.FAILED) == 1
 
 def test_average_execution_time(request_service: RequestService):
     now = datetime.now(timezone.utc)
@@ -103,8 +103,8 @@ def test_average_success_and_failed(request_service: RequestService):
     request_service.db.create(req2)
     request_service.db.create(req3)
     
-    avg_success = request_service.average_success_requests()
-    avg_failed = request_service.average_failed_requests()
+    avg_success = request_service.average_status_requests(status=RequestStatus.SUCCESS)
+    avg_failed = request_service.average_status_requests(status=RequestStatus.FAILED)
     assert avg_success == 2/3
     assert avg_failed == 1/3
 
@@ -145,16 +145,18 @@ def test_list_request_with_all_filters(request_service: RequestService):
     )
     assert len(filtered) == 2
     
-    filtered_success = request_service.list_successful_requests(
+    filtered_success = request_service.list_requests(
         job_id=job_id,
+        status=RequestStatus.SUCCESS,
         start_time = start,
         end_time = end,
     )
     assert len(filtered_success) == 2
     assert all(req.status == RequestStatus.SUCCESS for req in filtered_success)
     
-    filtered_failed = request_service.list_failed_requests(
+    filtered_failed = request_service.list_requests(
         job_id=job_id,
+        status=RequestStatus.FAILED,
         start_time = start,
         end_time = end,
     )

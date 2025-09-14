@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Any, List, Optional
 from uuid import UUID
-from src.core_api.models.requests import RequestStatus, Requests
-from src.core_api.config import DATABASE_NAME
-from src.core_api.db.connection import get_mongo_client
+from ..models.requests import RequestStatus, Requests
+from ..config import DATABASE_NAME
+from ..db.connection import get_mongo_client
 from pymongo.errors import PyMongoError
 from pymongo.database import Database
 from pymongo.collection import Collection
