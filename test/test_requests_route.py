@@ -173,3 +173,39 @@ def test_average_status_failed(client: Any):
     assert response.status_code == 200
     avg = response.json()["average_status"]
     assert avg == pytest.approx(1 / 3) #type: ignore
+
+def test_empty_requests(client: Any):
+    # List all requests should return empty list
+    response = client.get("/requests/")
+    assert response.status_code == 200
+    assert response.json() == []
+    
+    # Count requests should return zero
+    response = client.get("/requests/count")
+    assert response.status_code == 200
+    assert response.json()["count"] == 0
+    
+    # Count success requests should return zero
+    response = client.get("/requests/count?status=success")
+    assert response.status_code == 200
+    assert response.json()["count"] == 0
+    
+    # Count failed requests should return zero
+    response = client.get("/requests/count?status=failed")
+    assert response.status_code == 200
+    assert response.json()["count"] == 0
+
+    # Average execution time should return 0.0
+    response = client.get("/requests/average/execution-time")
+    assert response.status_code == 200
+    assert response.json()["average_execution_time"] == 0.0
+
+    # Average success status should return 0.0
+    response = client.get("/requests/average/status?status=success")
+    assert response.status_code == 200
+    assert response.json()["average_status"] == 0.0
+    
+    # Average failed status should return 0.0
+    response = client.get("/requests/average/status?status=failed")
+    assert response.status_code == 200
+    assert response.json()["average_status"] == 0.0

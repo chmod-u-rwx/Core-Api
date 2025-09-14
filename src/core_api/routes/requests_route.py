@@ -31,7 +31,7 @@ def list_requests(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to retrieve requests: {str(e)}"
+            detail=f"Internal Server Error: {str(e)}"
         )
 
 @router.get("/count")
@@ -53,7 +53,7 @@ def count_requests(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to retrieve count request: {str(e)}"
+            detail=f"Internal Server Error: {str(e)}"
         )
 
 @router.get("/average/execution-time")
@@ -75,7 +75,7 @@ def average_execution_time(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to retrieved average execution time: {str(e)}"
+            detail=f"Internal Server Error: {str(e)}"
         )
 
 @router.get("/average/status")
@@ -98,7 +98,7 @@ def average_status_requests(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to retrieved average status requests: {str(e)}"
+            detail=f"Internal Server Error: {str(e)}"
         )
 
 def parse_datetime(dt: Optional[str]) -> Optional[datetime]:
