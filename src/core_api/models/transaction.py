@@ -5,6 +5,7 @@ from src.core_api.models.requests import Requests
 
 class Transaction(BaseModel):
     transaction_id: Requests = Field(..., description="Reference to the Requests model")
+    request_id: Requests = Field(...)
     job_id: UUID = Field(...)
     worker_id: UUID = Field(...)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
