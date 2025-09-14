@@ -64,6 +64,14 @@ def test_list_transactions_filters(transaction_db: TransactionDatabase, make_tra
     results = transaction_db.list_transactions(start_time=start)
     assert len(results) == 0
 
+def test_list_transactions_no_filters(transaction_db: TransactionDatabase, make_transaction: Transaction):
+    transaction_db.create(make_transaction)
+    
+    results = transaction_db.list_transactions()
+    assert len(results) >= 1
+    assert any(t.transaction_id == make_transaction.transaction_id for t in results)
+
+
 def test_delete(transaction_db: TransactionDatabase, make_transaction: Transaction):
     transaction_db.create(make_transaction)
     result = transaction_db.delete(make_transaction.transaction_id)
