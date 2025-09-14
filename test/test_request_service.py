@@ -90,7 +90,7 @@ def test_average_execution_time(request_service: RequestService):
     request_service.db.create(req1)
     request_service.db.create(req2)
     
-    avg_time = request_service.average_execution_time()
+    avg_time = request_service.get_average_execution_time()
     assert avg_time == 3.0
 
 def test_average_success_and_failed(request_service: RequestService):
@@ -103,8 +103,8 @@ def test_average_success_and_failed(request_service: RequestService):
     request_service.db.create(req2)
     request_service.db.create(req3)
     
-    avg_success = request_service.average_status_requests(status=RequestStatus.SUCCESS)
-    avg_failed = request_service.average_status_requests(status=RequestStatus.FAILED)
+    avg_success = request_service.get_average_status_requests(status=RequestStatus.SUCCESS)
+    avg_failed = request_service.get_average_status_requests(status=RequestStatus.FAILED)
     assert avg_success == 2/3
     assert avg_failed == 1/3
 

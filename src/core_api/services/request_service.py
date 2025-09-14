@@ -31,7 +31,7 @@ class RequestService:
     ) -> int:
         return len(self.list_requests(job_id, status, start_time, end_time))
     
-    def average_execution_time(
+    def get_average_execution_time(
         self,
         job_id: Optional[UUID] = None,
         status: Optional[RequestStatus] = None,
@@ -42,7 +42,7 @@ class RequestService:
         times = [r.execution_time for r in requests]
         return sum(times) / len(times) if times else 0.0
 
-    def average_status_requests(
+    def get_average_status_requests(
         self,
         job_id: Optional[UUID] = None,
         status: Optional[RequestStatus] = None,
