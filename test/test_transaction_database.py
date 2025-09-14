@@ -34,21 +34,22 @@ def make_transaction() -> Transaction:
         total_cost=0.375,
     )
 
-
 def test_create_and_get(transaction_db: TransactionDatabase, make_transaction: Transaction):
     created = transaction_db.create(make_transaction)
     assert created.transaction_id == make_transaction.transaction_id
     assert created.total_cost == make_transaction.total_cost
 
-    fetched = transaction_db.get(make_transaction.transaction_id)
+    fetched = transaction_db.get_by_id(make_transaction.transaction_id)
     assert fetched.job_id == make_transaction.job_id
     assert fetched.execution_time == make_transaction.execution_time
-
 
 def test_list_transactions_filters(transaction_db: TransactionDatabase, make_transaction: Transaction):
     transaction_db.create(make_transaction)
 
     results = transaction_db.list_transactions(job_id=make_transaction.job_id)
+    assert len(results) == 1
+
+    results = transaction_db.list_transactions(request_id=make_transaction.request_id)
     assert len(results) == 1
 
     results = transaction_db.list_transactions(worker_id=make_transaction.worker_id)
@@ -63,19 +64,17 @@ def test_list_transactions_filters(transaction_db: TransactionDatabase, make_tra
     results = transaction_db.list_transactions(start_time=start)
     assert len(results) == 0
 
-
 def test_delete(transaction_db: TransactionDatabase, make_transaction: Transaction):
     transaction_db.create(make_transaction)
-    transaction_db.delete(make_transaction.transaction_id)
+    result = transaction_db.delete(make_transaction.transaction_id)
+    assert result is True
 
     with pytest.raises(TransactionNotFoundException):
-        transaction_db.get(make_transaction.transaction_id)
-
+        transaction_db.get_by_id(make_transaction.transaction_id)
 
 def test_get_not_found(transaction_db: TransactionDatabase):
     with pytest.raises(TransactionNotFoundException):
-        transaction_db.get(uuid4())
-
+        transaction_db.get_by_id(uuid4())
 
 def test_delete_not_found(transaction_db: TransactionDatabase):
     with pytest.raises(TransactionNotFoundException):

@@ -70,7 +70,7 @@ class TransactionDatabase:
         except PyMongoError as e:
             raise RuntimeError(f"Failed to create transaction: {e}")
 
-    def get(self, transaction_id: UUID) -> Transaction:
+    def get_by_id(self, transaction_id: UUID) -> Transaction:
 
         doc = self.collection.find_one({"transaction_id": str(transaction_id)})
         if not doc:
@@ -78,17 +78,6 @@ class TransactionDatabase:
         
         doc.pop("_id", None)
         return Transaction(**doc)
-
-    def get_by_request_id(self, request_id: UUID) -> List[Transaction]:
-
-        docs = self.collection.find({"request_id": str(request_id)})
-        transactions: List[Transaction] = []
-        
-        for doc in docs:
-            doc.pop("_id", None)
-            transactions.append(Transaction(**doc))
-        
-        return transactions
 
     def get_by_job_id(self, job_id: UUID) -> List[Transaction]:
         docs = self.collection.find({"job_id": str(job_id)})
