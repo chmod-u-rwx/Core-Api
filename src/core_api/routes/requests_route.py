@@ -17,13 +17,7 @@ def list_requests(
     end_time: Optional[str] = Query(None),
 ):
     start, end = validate_time_range(start_time, end_time)
-        
-    if start and end and start > end:
-        raise HTTPException(
-            status_code=400,
-            detail="start_time cannot be after end_time",
-        )
-        
+
     try:
         return RequestService().list_requests(
             job_id,
