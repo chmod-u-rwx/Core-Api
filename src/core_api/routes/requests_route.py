@@ -12,6 +12,7 @@ router = APIRouter(prefix="/requests", tags=["Request Metrics"])
 @router.get("/", response_model=List[Requests])
 def list_requests(
     job_id: Optional[UUID] = Query(None),
+    worker_id: Optional[UUID] = Query(None),
     status: Optional[RequestStatus] = Query(None),
     start_time: Optional[str] = Query(None),
     end_time: Optional[str] = Query(None),
@@ -21,6 +22,7 @@ def list_requests(
     try:
         return RequestService().list_requests(
             job_id,
+            worker_id,
             status,
             start_time=start,
             end_time=end,
@@ -37,6 +39,7 @@ def list_requests(
 @router.get("/count")
 def count_requests(
     job_id: Optional[UUID] = Query(None),
+    worker_id: Optional[UUID] = Query(None),
     status: Optional[RequestStatus] = Query(None),
     start_time: Optional[str] = Query(None),
     end_time: Optional[str] = Query(None),
@@ -46,6 +49,7 @@ def count_requests(
     try:
         return {"count": RequestService().count_requests(
             job_id,
+            worker_id,
             status,
             start_time=start,
             end_time=end,
@@ -59,6 +63,7 @@ def count_requests(
 @router.get("/average/execution-time")
 def average_execution_time(
     job_id: Optional[UUID] = Query(None),
+    worker_id: Optional[UUID] = Query(None),
     status: Optional[RequestStatus] = Query(None),
     start_time: Optional[str] = Query(None),
     end_time: Optional[str] = Query(None),
@@ -68,6 +73,7 @@ def average_execution_time(
     try:
         return {"average_execution_time": RequestService().get_average_execution_time(
             job_id,
+            worker_id,
             status,
             start_time=start,
             end_time=end,
@@ -81,6 +87,7 @@ def average_execution_time(
 @router.get("/average/status")
 def average_status_requests(
     job_id: Optional[UUID] = Query(None),
+    worker_id: Optional[UUID] = Query(None),
     status: Optional[RequestStatus] = Query(None),
     start_time: Optional[str] = Query(None),
     end_time: Optional[str] = Query(None),
@@ -90,6 +97,7 @@ def average_status_requests(
     try:
         return {"average_status": RequestService().get_average_status_requests(
             job_id,
+            worker_id,
             status,
             start_time=start,
             end_time=end,

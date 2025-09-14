@@ -209,3 +209,58 @@ def test_empty_requests(client: Any):
     response = client.get("/requests/average/status?status=failed")
     assert response.status_code == 200
     assert response.json()["average_status"] == 0.0
+
+def test_worker_id_filtering(client: Any):
+    now = datetime.now(timezone.utc)
+    job_id = uuid4()
+    worker_id_1 = uuid4()
+    worker_id_2 = uuid4()
+
+    req_assign_worker1 = make_request(
+        status=RequestStatus.SUCCESS,
+        exec_time=2.0,
+        timestamp=now,
+        job_id=job_id
+    ).model_copy(update={"worker_id": worker_id_1})
+
+    req_assign_worker2 = make_request(
+        status=RequestStatus.FAILED,
+        exec_time=3.0,
+        timestamp=now + timedelta(minutes=1),
+        job_id=job_id
+    ).model_copy(update={"worker_id": worker_id_2})
+
+    req_assign_worker3 = make_request(
+        status=RequestStatus.SUCCESS,
+        exec_time=4.0,
+        timestamp=now + timedelta(minutes=2),
+        job_id=job_id
+    ).model_copy(update={"worker_id": worker_id_1})
+
+    RequestService().db.create(req_assign_worker1)
+    RequestService().db.create(req_assign_worker2)
+    RequestService().db.create(req_assign_worker3)
+
+    # Filter by worker_id_1
+    response = client.get(
+        "/requests/",
+        params={
+            "worker_id": str(worker_id_1)
+        }
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert all(r["worker_id"] == str(worker_id_1) for r in data)
+
+    # Filter by worker_id_2
+    response = client.get(
+        "/requests/",
+        params={
+            "worker_id": str(worker_id_2)
+        }
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["worker_id"] == str(worker_id_2)

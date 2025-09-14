@@ -49,7 +49,7 @@ def make_request(status: RequestStatus = RequestStatus.SUCCESS):
             status_code=200,
             meta={},
             headers={},
-            body={"data", "test"},
+            body={"data": "test"},
         ),
         status=status,
         timestamp=now,
@@ -96,3 +96,27 @@ def test_get_not_found(requests_db: RequestDatabase):
 def test_delete_not_found(requests_db: RequestDatabase):
     with pytest.raises(RequestNotFoundException):
         requests_db.delete(uuid4())
+
+def test_list_request_worker_id_filter(requests_db: RequestDatabase):
+    worker_id_1 = uuid4()
+    worker_id_2 = uuid4()
+    req1 = make_request()
+    req2 = make_request()
+    req3 = make_request()
+    
+    # Assign worker IDs
+    req_assign_worker1 = req1.model_copy(update={"worker_id": worker_id_1})
+    req_assign_worker2 = req2.model_copy(update={"worker_id": worker_id_2})
+    req_assign_worker3 = req3.model_copy(update={"worker_id": worker_id_1})
+    
+    requests_db.create(req_assign_worker1)
+    requests_db.create(req_assign_worker2)
+    requests_db.create(req_assign_worker3)
+    
+    filtered = requests_db.list_request(worker_id=worker_id_1)
+    assert len(filtered) == 2
+    assert all(r.worker_id == worker_id_1 for r in filtered)
+    
+    filtered2 = requests_db.list_request(worker_id=worker_id_2)
+    assert len(filtered2) == 1
+    assert filtered2[0].worker_id == worker_id_2

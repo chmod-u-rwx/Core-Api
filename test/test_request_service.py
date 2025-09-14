@@ -161,3 +161,28 @@ def test_list_request_with_all_filters(request_service: RequestService):
         end_time = end,
     )
     assert len(filtered_failed) == 0
+
+def test_list_request_worker_id_filter(request_service: RequestService):
+    now = datetime.now(timezone.utc)
+    worker_id_1 = uuid4()
+    worker_id_2 = uuid4()
+    req1 = make_request(status=RequestStatus.SUCCESS, exec_time=1.0, timestamp=now)
+    req2 = make_request(status=RequestStatus.FAILED, exec_time=2.0, timestamp=now)
+    req3 = make_request(status=RequestStatus.SUCCESS, exec_time=3.0, timestamp=now)
+
+    # Assign worker IDs
+    req_assign_worker1 = req1.model_copy(update={"worker_id": worker_id_1})
+    req_assign_worker2 = req2.model_copy(update={"worker_id": worker_id_2})
+    req_assign_worker3 = req3.model_copy(update={"worker_id": worker_id_1})
+
+    request_service.db.create(req_assign_worker1)
+    request_service.db.create(req_assign_worker2)
+    request_service.db.create(req_assign_worker3)
+
+    filtered = request_service.list_requests(worker_id=worker_id_1)
+    assert len(filtered) == 2
+    assert all(r.worker_id == worker_id_1 for r in filtered)
+
+    filtered2 = request_service.list_requests(worker_id=worker_id_2)
+    assert len(filtered2) == 1
+    assert filtered2[0].worker_id == worker_id_2
