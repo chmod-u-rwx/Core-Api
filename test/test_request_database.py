@@ -74,11 +74,11 @@ def test_list_request_filters(requests_db: RequestDatabase):
     all_reqs = requests_db.list_request()
     assert len(all_reqs) == 2
     
-    success_reqs = requests_db.list_request(request_status=RequestStatus.SUCCESS)
+    success_reqs = requests_db.list_request(status=RequestStatus.SUCCESS)
     assert len(success_reqs) == 1
     assert success_reqs[0].status == RequestStatus.SUCCESS
     
-    failed_reqs = requests_db.list_request(request_status=RequestStatus.FAILED)
+    failed_reqs = requests_db.list_request(status=RequestStatus.FAILED)
     assert len(failed_reqs) == 1
     assert failed_reqs[0].status == RequestStatus.FAILED
 

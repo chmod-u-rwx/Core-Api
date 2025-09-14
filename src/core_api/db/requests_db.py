@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Any, List, Optional
 from uuid import UUID
-from src.core_api.models.requests import RequestStatus, Requests
-from src.core_api.config import DATABASE_NAME
-from src.core_api.db.connection import get_mongo_client
+from ..models.requests import RequestStatus, Requests
+from ..config import DATABASE_NAME
+from ..db.connection import get_mongo_client
 from pymongo.errors import PyMongoError
 from pymongo.database import Database
 from pymongo.collection import Collection
@@ -68,25 +68,25 @@ class RequestDatabase:
     def list_request(
         self,
         job_id: Optional[UUID] = None,
-        request_status: Optional[RequestStatus] = None,
+        status: Optional[RequestStatus] = None,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
     ) -> List[Requests]:
         query = {}
         
         if job_id:
-            query["job_id"] = job_id
+            query["job_id"] = str(job_id)
         
-        if request_status is not None:
-            query["status"] = request_status
+        if status is not None:
+            query["status"] = status.value
         
         if start_time or end_time:
             query["timestamp"] = {}
             if start_time:
-                query["timestamp"]["$gte"] = start_time
+                query["timestamp"]["$gte"] = start_time.isoformat()
             
             if end_time:
-                query["timestamp"]["$lte"] = end_time
+                query["timestamp"]["$lte"] = end_time.isoformat()
         
         docs = list(self.collection.find(query))
         
