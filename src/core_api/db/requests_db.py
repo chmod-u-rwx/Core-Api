@@ -68,6 +68,7 @@ class RequestDatabase:
     def list_request(
         self,
         job_id: Optional[UUID] = None,
+        worker_id: Optional[UUID] = None,
         status: Optional[RequestStatus] = None,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
@@ -76,6 +77,9 @@ class RequestDatabase:
         
         if job_id:
             query["job_id"] = str(job_id)
+        
+        if worker_id:
+            query["worker_id"] = str(worker_id)
         
         if status is not None:
             query["status"] = status.value
