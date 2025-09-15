@@ -6,6 +6,7 @@ from src.core_api.db.connection import get_mongo_client
 from pymongo.errors import PyMongoError
 from pymongo.database import Database
 from pymongo.collection import Collection
+
 from src.core_api.models.transaction import Transaction
 
 class TransactionNotFoundException(Exception):
@@ -44,6 +45,10 @@ class TransactionDatabase:
                 [("timestamp", 1)],
                 name="idx_timestamp",
             )
+            self.collection.create_index(
+                [("status", 1)],
+                name="idx_status",
+            )
         except PyMongoError as e:
             raise RuntimeError(f"Index creation failed: {e}")
 
@@ -55,6 +60,7 @@ class TransactionDatabase:
         doc["job_id"] = str(transaction.job_id)
         doc["worker_id"] = str(transaction.worker_id)
         doc["timestamp"] = transaction.timestamp
+        doc["status"] = transaction.status
 
         try:
             result = self.collection.insert_one(doc)
