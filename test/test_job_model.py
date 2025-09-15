@@ -9,7 +9,7 @@ def test_job_model_valid():
         job_id=uuid4(),
         job_name="Pahiram Ram",
         job_description="Pahiram lang, damot",
-        status=JobStatus.paused,
+        status=JobStatus.PAUSED,
         resources=JobResources(cpu=2, ram=4),
         repo_url=HttpUrl("https://github.com/example/repo.git"),
     )

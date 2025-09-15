@@ -19,7 +19,7 @@ class JobService:
             job_description=create_job.job_description,
             repo_url=create_job.repo_url,
             resources=create_job.resources,
-            status=JobStatus.paused,
+            status=JobStatus.PAUSED,
             created_at=now,
             updated_at=now,
         )
