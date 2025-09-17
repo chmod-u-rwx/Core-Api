@@ -86,10 +86,16 @@ class JobDatabase:
 
         update_fields = {k: v for k, v in update_data.model_dump().items() if v is not None}
         
+        if "repo_url" in update_fields and update_fields["repo_url"] is not None:
+            update_fields["repo_url"] = str(update_fields["repo_url"])
+            
+        if "updated_at" in update_fields and update_fields["updated_at"] is not None:
+            update_fields["updated_at"] = update_fields["updated_at"].isoformat()
+        
         if not update_fields:
             raise ValueError("No valid fields to update.")
         
-        update_fields["updated_at"] = datetime.now(timezone.utc)
+        update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
         
         try:
             result = self.collection.update_one({"job_id": str(job_id)}, {"$set": update_fields})
