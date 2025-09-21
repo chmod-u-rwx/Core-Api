@@ -5,7 +5,7 @@ from datetime import datetime
 from src.core_api.models.transaction import Transaction
 from src.core_api.db.transaction_db import TransactionDatabase
 
-CURRENT_RAM_PER_SEC = 0.05
+CURRENT_RAM_PER_SEC = 0.05 # can be change
 CURRENT_CPU_PER_SEC = 0.1
 
 
