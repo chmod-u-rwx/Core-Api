@@ -1,11 +1,10 @@
 from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime, timezone
-from src.core_api.models.requests import Requests
 
 class Transaction(BaseModel):
-    transaction_id: Requests = Field(..., description="Reference to the Requests model")
-    request_id: Requests = Field(...)
+    transaction_id: UUID = Field(..., description="Reference to the Requests model")
+    request_id: UUID = Field(..., description="Reference to the Requests model")
     job_id: UUID = Field(...)
     worker_id: UUID = Field(...)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
