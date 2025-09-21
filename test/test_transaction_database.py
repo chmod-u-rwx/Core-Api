@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import patch
 from mongomock import MongoClient
 
-from src.core_api.models.transaction import Transaction
+from src.core_api.models.transaction import Transaction, TransactionStatus
 from src.core_api.db.transaction_db import (TransactionDatabase,TransactionNotFoundException,)
 
 
@@ -32,6 +32,7 @@ def make_transaction() -> Transaction:
         cost_cpu=0.1,
         execution_time=2.5,
         total_cost=0.375,
+        status = TransactionStatus.PAID,
     )
 
 def test_create_and_get(transaction_db: TransactionDatabase, make_transaction: Transaction):
