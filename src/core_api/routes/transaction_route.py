@@ -17,15 +17,6 @@ def create_transaction(transaction: Transaction):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-
-@router.get("/{transaction_id}", response_model=Transaction)
-def get_transaction(transaction_id: UUID):
-    try:
-        return service.db.get_by_id(transaction_id)
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
 
 @router.get("/history", response_model=List[Transaction])
 def get_transaction_history(
@@ -56,3 +47,10 @@ def get_summary(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/{transaction_id}", response_model=Transaction)
+def get_transaction(transaction_id: UUID):
+    try:
+        return service.db.get_by_id(transaction_id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
