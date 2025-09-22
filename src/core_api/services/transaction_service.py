@@ -6,8 +6,7 @@ from src.core_api.models.transaction import Transaction
 from src.core_api.db.transaction_db import TransactionDatabase
 
 CURRENT_RAM_PER_SEC = 0.05 # can be change
-CURRENT_CPU_PER_SEC = 0.1
-
+CURRENT_CPU_PER_SEC = 0.03
 
 class TransactionService:
     def __init__(self, db: Optional[TransactionDatabase] = None):
