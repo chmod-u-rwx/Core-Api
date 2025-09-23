@@ -7,6 +7,12 @@ from ..db.requests_db import RequestDatabase
 class RequestService:
     def __init__(self):
         self.db = RequestDatabase()
+    
+    def create_request(
+        self,
+        request: Requests
+    ) -> Requests:
+        return self.db.create(request)
 
     def list_requests(
         self,

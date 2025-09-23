@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 import pytest
 from mongomock import MongoClient
 
-from src.core_api.models.payloads import JobRequestPayload, JobResponsePayload
+from src.core_api.models.payloads import JobRequestPayload, JobResponsePayload, MethodEnum
 from src.core_api.models.requests import RequestStatus, Requests
 from src.core_api.services.request_service import RequestService
 
@@ -59,6 +59,52 @@ def make_request(
         execution_time=exec_time,
         transaction_id=transaction_id
     )
+
+def test_create_request(request_service: RequestService):
+    req_id = uuid4()
+    job_id = uuid4()
+    worker_id = uuid4()
+    vm_id = uuid4()
+    transaction_id = uuid4()
+    now = datetime.now(timezone.utc)
+    request = Requests(
+        request_id=req_id,
+        job_id=job_id,
+        worker_id=worker_id,
+        vm_id=vm_id,
+        request_payload=JobRequestPayload(
+            request_id=req_id,
+            job_id=job_id,
+            master_id=uuid4(),
+            worker_id=worker_id,
+            path="/test",
+            method=MethodEnum.POST,
+            headers={},
+            params={},
+            body={"data": "test"}
+        ),
+        response_payload=JobResponsePayload(
+            request_id=req_id,
+            job_id=job_id,
+            master_id=uuid4(),
+            worker_id=worker_id,
+            status_code=200,
+            meta={},
+            headers={},
+            body={"data": "test"},
+        ),
+        status=RequestStatus.SUCCESS,
+        timestamp=now,
+        execution_time=1.5,
+        transaction_id=transaction_id
+    )
+    
+    created = request_service.create_request(request)
+    assert created.request_id == req_id
+    assert created.job_id == job_id
+    assert created.worker_id == worker_id
+    assert created.status == RequestStatus.SUCCESS
+    assert created.execution_time == 1.5
 
 def test_list_and_count_requests(request_service: RequestService):
     now = datetime.now(timezone.utc)

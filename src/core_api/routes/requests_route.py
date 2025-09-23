@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query
 
 from ..db.requests_db import RequestNotFoundException
 from ..services.request_service import RequestService
@@ -9,7 +9,17 @@ from ..models.requests import RequestStatus, Requests
 
 router = APIRouter(prefix="/requests", tags=["Request Metrics"])
 
-@router.get("/", response_model=List[Requests])
+@router.post("/", response_model=Requests)
+def create_request(request: Requests = Body(...)):
+    try:
+        return RequestService().create_request(request)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal Server Error: {e}"
+        )
+
+@router.get("/list-requests", response_model=List[Requests])
 def list_requests(
     job_id: Optional[UUID] = Query(None),
     worker_id: Optional[UUID] = Query(None),
