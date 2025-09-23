@@ -1,14 +1,14 @@
 from uuid import UUID
 from fastapi import APIRouter, HTTPException
-from src.core_api.db.node_database import NodeDatabase
-from src.core_api.models.node_model import NodeUpdates, Node
+from src.core_api.db.worker_node_db import NodeDatabase
+from src.core_api.models.worker_node import WorkerNodeUpdates, WorkerNode
 from src.core_api.services.node_service import NodeService
-from src.core_api.db.node_database import InvalidUpdate
+from src.core_api.db.worker_node_db import InvalidUpdate
 
 router = APIRouter(prefix="/worker-node",tags= ["Nodes"] )
 
-@router.post("/update", response_model=Node)
-def update_node(node_id: UUID, updates: NodeUpdates):
+@router.post("/update", response_model=WorkerNode)
+def update_node(node_id: UUID, updates: WorkerNodeUpdates):
     try:
         return NodeService(NodeDatabase()).update_node(node_id, updates)
     except InvalidUpdate:

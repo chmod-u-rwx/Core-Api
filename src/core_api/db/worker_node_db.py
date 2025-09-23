@@ -1,8 +1,8 @@
 from typing import List
 from uuid import UUID
 from pymongo.errors import PyMongoError, DuplicateKeyError
-from ..models.node_model import Node, NodeUpdates
-from ..db.connection import get_mongo_client
+from ..models.worker_node import WorkerNode, WorkerNodeUpdates
+from .connection import get_mongo_client
 from ..config import DATABASE_NAME
 
 class InvalidUpdate(Exception):
@@ -21,7 +21,7 @@ class NodeDatabase:
         except PyMongoError as e:
             raise RuntimeError(f"Index creation failed: {e}")
 
-    def create_node(self, node_data: Node) -> Node:
+    def create_node(self, node_data: WorkerNode) -> WorkerNode:
         db_data = node_data.model_dump()
         db_data["node_id"] = str(db_data["node_id"])
         try:
@@ -32,24 +32,24 @@ class NodeDatabase:
         except PyMongoError as e:
             raise RuntimeError(f"Creating node failed: {e}")
 
-    def get_node(self, node_id: UUID) -> Node:
+    def get_node(self, node_id: UUID) -> WorkerNode:
         data = self.nodes.find_one({"node_id": str(node_id)})
         if not data:
             raise KeyError(f"Node with ID {node_id} does not exist")
         data["node_id"] = UUID(data["node_id"])
-        return Node(**data)
+        return WorkerNode(**data)
 
-    def get_all_nodes(self) -> List[Node]:
+    def get_all_nodes(self) -> List[WorkerNode]:
         try:
-            nodes: List[Node] = []
+            nodes: List[WorkerNode] = []
             for data in self.nodes.find():
                 data["node_id"] = UUID(data["node_id"])
-                nodes.append(Node(**data))
+                nodes.append(WorkerNode(**data))
             return nodes
         except PyMongoError as e:
             raise RuntimeError(f"Fetching all nodes failed: {e}")
 
-    def update_node(self, node_id: UUID, update_data: NodeUpdates) -> Node:
+    def update_node(self, node_id: UUID, update_data: WorkerNodeUpdates) -> WorkerNode:
         node_id_str = str(node_id)
         existing = self.get_node(node_id)  # will raise if not found
         if not existing:

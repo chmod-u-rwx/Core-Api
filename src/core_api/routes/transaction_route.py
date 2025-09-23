@@ -7,10 +7,10 @@ from src.core_api.services.transaction_service import TransactionService
 from src.core_api.models.transaction import Transaction
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
-service = TransactionService()
 
 @router.post("/", response_model=Transaction)
 def create_transaction(transaction: Transaction):
+    service = TransactionService()
     try:
         return service.db.create(transaction)
     except ValueError as e:
@@ -25,6 +25,7 @@ def get_transaction_history(
     end_time: Optional[datetime] = None,
     limit: int = 100
 ):
+    service = TransactionService()
     try:
         return service.get_transaction_history(job_id, start_time, end_time, limit)
     except Exception as e:
@@ -37,6 +38,7 @@ def get_summary(
     start_time: Optional[datetime] = None,
     end_time: Optional[datetime] = None
 ):
+    service = TransactionService()
     try:
         return {
             "total_expenses": service.get_total_expenses(job_id, start_time, end_time),
@@ -50,6 +52,7 @@ def get_summary(
 
 @router.get("/{transaction_id}", response_model=Transaction)
 def get_transaction(transaction_id: UUID):
+    service = TransactionService()
     try:
         return service.db.get_by_id(transaction_id)
     except Exception as e:
