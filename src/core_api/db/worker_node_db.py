@@ -1,14 +1,15 @@
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 from uuid import UUID
 from pymongo.errors import PyMongoError, DuplicateKeyError
-from ..models.worker_node import WorkerNode, WorkerNodeUpdates
+from ..models.worker_node import WorkerNode, WorkerNodeUpdates, WorkerNodeResources
 from .connection import get_mongo_client
 from ..config import DATABASE_NAME
 
 class InvalidUpdate(Exception):
     ...
 
-class NodeDatabase:
+class WorkerNodeDatabase:
     def __init__(self):
         self.client = get_mongo_client()
         self.db = self.client[DATABASE_NAME] 
@@ -82,3 +83,52 @@ class NodeDatabase:
     def close(self):
         if hasattr(self, "client"):
             self.client.close()
+
+class WorkerNodeResourceDatabase:
+    def __init__(self):
+        self.client = get_mongo_client()
+        self.db = self.client[DATABASE_NAME] 
+        self.collection = self.db["NodeResources"]
+        self._check_indexes()
+
+    def _check_indexes(self):
+        try:
+            self.collection.create_index("worker_id")
+            self.collection.create_index("timestamp")
+        except PyMongoError as e:
+            raise RuntimeError(f"Index creation failed: {e}")
+        
+    def insert(self, resource: WorkerNodeResources) -> WorkerNodeResources:
+        db_data = resource.model_dump()
+        db_data["worker_id"] = str(db_data["worker_id"])
+        try:
+            result = self.collection.insert_one(db_data)
+            if not result.acknowledged:
+                raise RuntimeError("Inserting resource report failed: not acknowledged")
+            if not result.inserted_id:
+                raise RuntimeError("Inserting resource report failed: no inserted_id")
+            return resource
+        except PyMongoError as e:
+            raise RuntimeError(f"Inserting resource report failed: {e}")
+    
+    def list_resources(self, 
+                       worker_id: Optional[UUID] = None, 
+                       start_time: Optional[datetime] = None, 
+                       end_time: Optional[datetime] = None) -> List[WorkerNodeResources]:
+        try:
+            query = {}
+            
+            if worker_id:
+                query["worker_id"] = str(worker_id)
+            if start_time or end_time:
+                query["timestamp"] = {}
+                if start_time:
+                    query["timestamp"]["$gte"] = start_time
+                if end_time:
+                    query["timestamp"]["$lte"] = end_time
+                
+            docs = list(self.collection.find(query))
+            
+            return [WorkerNodeResources(**doc) for doc in docs]
+        except PyMongoError as e:
+            raise RuntimeError(f"Listing resource reports failed: {e}")
