@@ -90,9 +90,58 @@ def insert_requests():
     
     return job_id, now
 
+def test_create_request(client: Any):
+    req_id = uuid4()
+    job_id = uuid4()
+    worker_id = uuid4()
+    vm_id = uuid4()
+    transaction_id = uuid4()
+    now = datetime.now(timezone.utc)
+    
+    payload: dict[str, Any] = {
+        "request_id": str(req_id),
+        "job_id": str(job_id),
+        "worker_id": str(worker_id),
+        "vm_id": str(vm_id),
+        "request_payload": {
+            "request_id": str(req_id),
+            "job_id": str(job_id),
+            "master_id": str(uuid4()),
+            "worker_id": str(worker_id),
+            "path": "/test",
+            "method": "POST",
+            "headers": {},
+            "params": {},
+            "body": {"data": "test"}
+        },
+        "response_payload": {
+            "request_id": str(req_id),
+            "job_id": str(job_id),
+            "master_id": str(uuid4()),
+            "worker_id": str(worker_id),
+            "status_code": 200,
+            "meta": {},
+            "headers": {},
+            "body": {"data": "test"}
+        },
+        "status": "success",
+        "timestamp": now.isoformat(),
+        "execution_time": 1.5,
+        "transaction_id": str(transaction_id)
+    }
+    
+    response = client.post("/requests/", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["request_id"] == str(req_id)
+    assert data["job_id"] == str(job_id)
+    assert data["worker_id"] == str(worker_id)
+    assert data["status"] == "success"
+    assert data["execution_time"] == 1.5
+
 def test_list_all_requests(client: Any):
     insert_requests()
-    response = client.get("/requests/")
+    response = client.get("/requests/list-requests")
     assert response.status_code == 200
     
     data = response.json()
@@ -100,7 +149,7 @@ def test_list_all_requests(client: Any):
 
 def test_list_successful_requests(client: Any):
     insert_requests()
-    response = client.get(f"/requests/?status=success")
+    response = client.get(f"/requests/list-requests/?status=success")
     assert response.status_code == 200
     
     data = response.json()
@@ -109,7 +158,7 @@ def test_list_successful_requests(client: Any):
 
 def test_list_failed_requests(client: Any):
     insert_requests()
-    response = client.get(f"/requests/?status=failed")
+    response = client.get(f"/requests/list-requests/?status=failed")
     assert response.status_code == 200
     
     data = response.json()
@@ -121,7 +170,7 @@ def test_timeframe_and_job_id_filtering(client: Any):
     start = now.isoformat()
     end = (now + timedelta(minutes=1, seconds=30)).isoformat()
     response = client.get(
-        "/requests/",
+        "/requests/list-requests/",
         params={
             "job_id": str(job_id),
             "start_time": start,
@@ -176,7 +225,7 @@ def test_average_status_failed(client: Any):
 
 def test_empty_requests(client: Any):
     # List all requests should return empty list
-    response = client.get("/requests/")
+    response = client.get("/requests/list-requests/")
     assert response.status_code == 200
     assert response.json() == []
     
@@ -243,7 +292,7 @@ def test_worker_id_filtering(client: Any):
 
     # Filter by worker_id_1
     response = client.get(
-        "/requests/",
+        "/requests/list-requests/",
         params={
             "worker_id": str(worker_id_1)
         }
@@ -255,7 +304,7 @@ def test_worker_id_filtering(client: Any):
 
     # Filter by worker_id_2
     response = client.get(
-        "/requests/",
+        "/requests/list-requests/",
         params={
             "worker_id": str(worker_id_2)
         }
